@@ -20,5 +20,5 @@ Goal: Multiplayer Card-Based Game
 Things to do:
 1. Make websocket in Flask
 2. Connecting the database
-3. Connect frontend and backward
+3. Connect frontend and backend
 
