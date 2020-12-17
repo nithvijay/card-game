@@ -1,4 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
-  <h1>Home Page</h1>
+<h1>Home Page</h1>
+
+<p>Type a room number to begin chatting</p>
+
+<form action="{{ url_for('home') }}" id='form' method="post">
+  <label for="roomTextBox">Room Number: </label>
+  <input type="text" name="room">
+  <button id="roomButton">Submit</button>
+</form>
+
 {% endblock content %}
