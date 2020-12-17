@@ -31,3 +31,8 @@ Things to do:
 - [ ] Make fully featured card game
 - [ ] Deploy to GCP or Heroku
 
+Tutorials:
+1. Websockets in Flask - https://flask-socketio.readthedocs.io/en/latest/
+2. Docker Part 1 - https://docs.docker.com/get-started/
+3. Docker Part 2 - https://docs.docker.com/get-started/part2/
+4. Docker-Compose - https://docs.docker.com/compose/gettingstarted/
