@@ -5,8 +5,9 @@ import datetime
 app = Flask(__name__)
 socketio = SocketIO(app)
 
+@app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
-def home():
+def home(): # Users type the chat room they want to go to
     if request.method == 'POST':
         room = request.form['room']
         return redirect(url_for('rooms', room=room))
@@ -14,16 +15,15 @@ def home():
         return render_template('index.html')
 
 @app.route('/rooms/<room>')
-def rooms(room):
+def rooms(room): #the chat room itself. The URL is what determines the chat room. Therefore, it is possible to bypass the home page entirely
     return render_template('rooms.html', room=room)
 
 @app.route('/chat')
-def chat():
-    app.logger.info("At chat")
+def chat(): # Random template/testing page. Can be ignored
     return render_template('chat.html')
 
 @app.route('/form', methods=['GET', 'POST'])
-def form():
+def form(): # Random page testing forms and javascript in flask. Can be ignored
     context = {}
     if request.method == 'POST':
         context['name'] = request.form['name']
@@ -34,21 +34,21 @@ def form():
 ##################################
 
 @socketio.on('join')
-def on_join(data):
+def on_join(data): # This is called in chatapp.js when the user submits a name in /rooms/<room>
     username = data['username']
     room = data['room']
     join_room(room)
     emit('chat message', {'message': f"{username} has entered Room {room}"}, room=room)
 
 @socketio.on('leave')
-def on_leave(data):
+def on_leave(data): # not sure when/if this is called; needs more research
     username = data['username']
     room = data['room']
     leave_room(room)
     emit('chat message', {'message': f"{username} has left Room {room}"}, room=room)
 
 @socketio.on("chat")
-def handle_chat(data):
+def handle_chat(data): #This is called in chatapp.js when the user sends a message to the room
     room = data['room']
     username = data['username']
     message = data['text']
