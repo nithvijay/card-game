@@ -55,4 +55,3 @@ $ docker exec -it redis bash
 $ redis-cli
 ```
 
-To store messages, a list will be used. The name of the list will be the room key, and the contents will be the message. The most recent messages that are not people joining/leaving the room will be displayed.
