@@ -10,4 +10,15 @@
   <button id="roomButton">Submit</button>
 </form>
 
+<table>
+  {% for room in rooms %}
+  <tr>
+    <td>{{ room.key }}</td>
+    <td>{{ room.members }} </td>
+    <td>{{ room.size }} </td>
+    <td>{{ room.peak }} </td>
+  </tr>
+  {% endfor %}
+</table>
+
 {% endblock content %}

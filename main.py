@@ -1,9 +1,17 @@
-from flask import Flask, redirect, render_template, url_for, request
-from flask_socketio import SocketIO, send, emit, join_room, leave_room
 import datetime
 
+import eventlet
+from flask import Flask, redirect, render_template, request, url_for, jsonify, session
+from flask_socketio import SocketIO, emit, join_room, leave_room, send
+import redis
+
+eventlet.monkey_patch()
+
+
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, message_queue="redis://redis:6379", async_handlers=True, async_mode='eventlet')
+r = redis.Redis(host='redis', port=6379, db=0, decode_responses=True)
+
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/home', methods=['GET', 'POST'])
@@ -12,7 +20,16 @@ def home(): # Users type the chat room they want to go to
         room = request.form['room']
         return redirect(url_for('rooms', room=room))
     else:
-        return render_template('index.html')
+        context = []
+        for key in r.scan_iter("room_keys:*"):
+            room = key.split(":")[1]
+            context.append(dict(
+                key=key,
+                members=list(r.smembers(key)), #sets do not work nicely with iteration
+                size=r.scard(key),
+                peak=list(r.lrange(room, 0, 10))
+            ))
+        return render_template('index.html', rooms=context)
 
 @app.route('/rooms/<room>')
 def rooms(room): #the chat room itself. The URL is what determines the chat room. Therefore, it is possible to bypass the home page entirely
@@ -35,10 +52,24 @@ def form(): # Random page testing forms and javascript in flask. Can be ignored
 
 @socketio.on('join')
 def on_join(data): # This is called in chatapp.js when the user submits a name in /rooms/<room>
-    username = data['username']
+    user = data['username']
     room = data['room']
+    sid = request.sid
     join_room(room)
-    emit('chat message', {'message': f"{username} has entered Room {room}"}, room=room)
+
+    # index of keys
+    r.sadd(f"list_of_rooms", room)
+    for key in r.scan_iter("room_keys:*"): # so users can only be part of one room, potentially slow with large number of rooms
+        if r.srem(key, sid):
+            old_room = key.split(":")[1]
+            leave_room(old_room)
+            emit('chat message', {'message': f"{user} has left Room {old_room}"}, room=old_room)
+
+    # todo: add map from sid to username
+    r.sadd(f"room_keys:{room}", sid)
+
+    emit('chat message', {'message': f"{user} has entered Room {room}"}, room=room)
+    emit('message_history', {'message_history': r.lrange(room, 0, 1000)})
 
 @socketio.on('leave')
 def on_leave(data): # not sure when/if this is called; needs more research
@@ -52,11 +83,25 @@ def handle_chat(data): #This is called in chatapp.js when the user sends a messa
     room = data['room']
     username = data['username']
     message = data['text']
-    emit('chat message', {'message': f"{datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-5))).strftime('%I:%M:%S %p')} - {username}: {message}"}, room=room)
+    to_send = f"{datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-5))).strftime('%I:%M:%S %p')} - {username}: {message}"
+    r.lpush(room, to_send)
 
-# @socketio.on('connect')
-# def please_work():
-#     print("Someone connected")
+    emit('debug', {'sid': request.sid, 'session': session.get('room')})
+    emit('chat message', {'message': to_send}, room=room)
+
+@socketio.on('disconnect')
+def on_disconnect():
+    sid = request.sid
+    for key in r.scan_iter("room_keys:*"): #check which room the user left
+        if r.srem(key, sid):
+            room = key.split(":")[1]
+            emit('chat message', {'message': f"{sid} has left Room {room}"}, room=room)
+            emit('update_room', {'room_occupants': list(r.smembers(key))}, room=room)
+
+# @socketio.on('disconnecting')
+# def on_disconnect():
+#     emit('chat message', {'message': "someone is leaving, but hasn't left yet"}, broadcast=True)
+
 
 # @socketio.on('message')
 # def handle_message(message):
