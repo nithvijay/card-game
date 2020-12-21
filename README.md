@@ -31,8 +31,28 @@ Things to do:
 - [ ] Make fully featured card game
 - [ ] Deploy to GCP or Heroku
 
-Tutorials:
-1. Websockets in Flask - https://flask-socketio.readthedocs.io/en/latest/
-2. Docker Part 1 - https://docs.docker.com/get-started/
-3. Docker Part 2 - https://docs.docker.com/get-started/part2/
-4. Docker-Compose - https://docs.docker.com/compose/gettingstarted/
+## Tutorials
+### Websockets
+- `Flask-SocketIO` - https://flask-socketio.readthedocs.io/en/latest/
+- Socket.IO Javascript Client API Docs - https://socket.io/docs/v3/client-api/index.html
+
+### Docker
+- Docker Part 1 - https://docs.docker.com/get-started/
+- Docker Part 2 - https://docs.docker.com/get-started/part2/
+- Docker-Compose - https://docs.docker.com/compose/gettingstarted/
+- Dockerfile Reference - https://docs.docker.com/engine/reference/builder/
+
+### Redis
+- Redis DB and CLI - https://www.tutorialspoint.com/redis/redis_environment.htm
+- Python Redis API - https://github.com/andymccurdy/redis-py
+- Redis Docker Image - https://hub.docker.com/_/redis
+
+
+
+**Redis Notes**
+```console
+$ docker exec -it redis bash
+$ redis-cli
+```
+
+To store messages, a list will be used. The name of the list will be the room key, and the contents will be the message. The most recent messages that are not people joining/leaving the room will be displayed.
