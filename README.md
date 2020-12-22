@@ -25,6 +25,7 @@ Things to do:
 - [x] Create Container environment
 - [x] Make basic websocket in Flask
 - [ ] Connect the database
+- [ ] Produce chat application for game
 - [ ] Make basic card game
 - [ ] Do Vue.js sample project
 - [ ] Link Flask backend and Vue.js frontend
