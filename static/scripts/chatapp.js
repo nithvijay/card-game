@@ -1,6 +1,6 @@
 var socket = io({transports: ['websocket']});
 console.log("Room: " + room);
-
+document.getElementById("messages").style.display = 'none';
 //makes users join the room only when they have made a username
 document.getElementById("nameButton").addEventListener('click', function(){
     username = document.getElementById("nameBox").value;
@@ -26,17 +26,23 @@ socket.on('debug', function(data){
 });
 
 socket.on('chat message', function(data) {
-document.getElementById("messagesList").innerHTML = document.getElementById("messagesList").innerHTML + "<br>" + data['message'];
-})
+    document.getElementById("messagesList").innerHTML = document.getElementById("messagesList").innerHTML + "<br>" + data['message'];
+});
+
 
 socket.on('message_history', function(data){
     for (let i = 0; i < data['message_history'].length; i++) {
-        document.getElementById("messagesList").innerHTML =  data['message_history'][i] + "<br>" + document.getElementById("messagesList").innerHTML;   
+        document.getElementById("messagesList").innerHTML = "<br>" + data['message_history'][i] + document.getElementById("messagesList").innerHTML;   
     }
+    document.getElementById("messagesList").innerHTML = "Messages:" + document.getElementById("messagesList").innerHTML;
 });
 
 socket.on('update_room', function(data){
-    console.log(data['room_occupants']);
+    table = document.getElementById("userListTable");
+    table.innerHTML = "";
+    for (let i = 0; i < data['room_occupants'].length; i++) {
+        table.innerHTML += "<br>" + data['room_occupants'][i];
+    }
 });
 
 
@@ -60,6 +66,10 @@ document.getElementById("messageBox").addEventListener('keyup', function(event){
     if (event.key == "Enter") {
         document.getElementById("sendMessageButton").click();
     }
+});
+
+document.getElementById("deleteHistory").addEventListener('click', function(){
+    socket.emit("delete history", {room: room});
 });
 
 

@@ -2,29 +2,41 @@
 {% block content %}
 <h1>Welcome to Room {{ room }}</h1>
 
+<div class="userList">
+    <p id="userListTable"></p>
+</div>
+
+<button id="deleteHistory">Delete History</button>
+
 <!-- <button id="connectDisconnect">Disconnect</button>
 <br> -->
 
 <script>var room = "{{ room|safe }}"</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='rooms.css') }}">
+
+<div class="messagingBox">
+
+    <div id="nameSubmission">
+        <h2>Enter your name</h2>
+        <label for="nameBox">Name: </label>
+        <input type="text" name="nameBox" id="nameBox">
+        <button id="nameButton">Submit</button>
+    </div>
+
+    <div id="messages">
+        <h2 id="usersname"></h2>
+        <input type="text" name="messageBox" id="messageBox">
+        <button id="sendMessageButton">Send message</button>
+        <p class="messagingBox" id="messagesList"></p>
+    </div>
+
+</div>
+
 
 <div id="debug"></div>
 
-<div id="nameSubmission">
-    <h2>Enter your name</h2>
-    <label for="nameBox">Name: </label>
-    <input type="text" name="nameBox" id="nameBox">
-    <button id="nameButton">Submit</button>
-</div>
-
-<div id="messages" hidden>
-    <br>
-    <h2 id="usersname"></h2>
-    <input type="text" name="messageBox" id="messageBox">
-    <button id="sendMessageButton">Send message</button>
-    <p id="messagesList"></p>
-</div>
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js"
+    integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ=="
+    crossorigin="anonymous"></script>
 <script src="{{ url_for('static', filename='scripts/chatapp.js') }}"></script>
 {% endblock content %}

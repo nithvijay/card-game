@@ -23,9 +23,10 @@ def home(): # Users type the chat room they want to go to
         context = []
         for key in r.scan_iter("room_keys:*"):
             room = key.split(":")[1]
+            members = [r.get(member) for member in list(r.smembers(key))]
             context.append(dict(
                 key=key,
-                members=list(r.smembers(key)), #sets do not work nicely with iteration
+                members=members, #sets do not work nicely with iteration
                 size=r.scard(key),
                 peak=list(r.lrange(room, 0, 10))
             ))
@@ -58,18 +59,21 @@ def on_join(data): # This is called in chatapp.js when the user submits a name i
     join_room(room)
 
     # index of keys
-    r.sadd(f"list_of_rooms", room)
+    r.sadd(f"list_of_rooms", room) # set named list_of_rooms contains all rooms 
     for key in r.scan_iter("room_keys:*"): # so users can only be part of one room, potentially slow with large number of rooms
         if r.srem(key, sid):
             old_room = key.split(":")[1]
             leave_room(old_room)
             emit('chat message', {'message': f"{user} has left Room {old_room}"}, room=old_room)
 
-    # todo: add map from sid to username
-    r.sadd(f"room_keys:{room}", sid)
+    
+    r.sadd(f"room_keys:{room}", sid) # set named room_keys:ASDF contains sid of users in the room
+    r.set(name=sid, value=user) #key-value pair for sid and user name
 
-    emit('chat message', {'message': f"{user} has entered Room {room}"}, room=room)
     emit('message_history', {'message_history': r.lrange(room, 0, 1000)})
+    emit('chat message', {'message': f"{user} has entered Room {room}"}, room=room)
+    members = [r.get(member) for member in list(r.smembers(f"room_keys:{room}"))]
+    emit('update_room', {'room_occupants': members}, room=room)
 
 @socketio.on('leave')
 def on_leave(data): # not sure when/if this is called; needs more research
@@ -95,8 +99,15 @@ def on_disconnect():
     for key in r.scan_iter("room_keys:*"): #check which room the user left
         if r.srem(key, sid):
             room = key.split(":")[1]
-            emit('chat message', {'message': f"{sid} has left Room {room}"}, room=room)
-            emit('update_room', {'room_occupants': list(r.smembers(key))}, room=room)
+            emit('chat message', {'message': f"{r.get(sid)} has left Room {room}"}, room=room)
+            members = [r.get(member) for member in list(r.smembers(f"room_keys:{room}"))]
+            emit('update_room', {'room_occupants': members}, room=room)
+    r.delete(sid)
+
+@socketio.on('delete history')
+def delete_history(data):
+    room = data['room']
+    r.delete(room)
 
 # @socketio.on('disconnecting')
 # def on_disconnect():
