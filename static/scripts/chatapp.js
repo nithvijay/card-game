@@ -1,12 +1,14 @@
 var socket = io({transports: ['websocket']});
 console.log("Room: " + room);
-document.getElementById("messages").style.display = 'none';
+document.getElementById("chatBox").style.display = 'none';
+document.getElementById("cardBox").style.display = 'none';
 //makes users join the room only when they have made a username
 document.getElementById("nameButton").addEventListener('click', function(){
     username = document.getElementById("nameBox").value;
     socket.emit('join', {username: username, room: room});
     document.getElementById("nameSubmission").style.display = 'none';           // Hide
-    document.getElementById("messages").style.display = 'block';          // Show
+    document.getElementById("chatBox").style.display = 'block';          // Show
+    document.getElementById("cardBox").style.display = 'block';          // Show
     document.getElementById("usersname").innerHTML = "Hi " + username
 });
 
@@ -16,8 +18,6 @@ socket.on('connect', function() {
     console.log("Socket is connected");
     socket.on('disconnect', function() {
         console.log("Socket is disconnected");
-        username = document.getElementById("nameBox").value;
-        socket.emit("leave", {username: username, room: room}); 
     });
 });
 
@@ -39,7 +39,7 @@ socket.on('message_history', function(data){
 
 socket.on('update_room', function(data){
     table = document.getElementById("userListTable");
-    table.innerHTML = "";
+    table.innerHTML = "Users in Room";
     for (let i = 0; i < data['room_occupants'].length; i++) {
         table.innerHTML += "<br>" + data['room_occupants'][i];
     }
@@ -72,6 +72,15 @@ document.getElementById("deleteHistory").addEventListener('click', function(){
     socket.emit("delete history", {room: room});
 });
 
+array = document.getElementsByClassName("grid-item");
+for (let i = 0; i < array.length; i++) {
+    array[i].addEventListener("mouseenter", function(){
+        array[i].style.background = 'yellow'
+    });
+    array[i].addEventListener("mouseleave", function(){
+        array[i].style.background = 'white'
+    });
+}
 
 // Code to connect and disconnect from the socket if necessary
 // document.getElementById("connectDisconnect").addEventListener('click', function(){

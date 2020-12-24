@@ -2,9 +2,6 @@
 {% block content %}
 <h1>Welcome to Room {{ room }}</h1>
 
-<div class="userList">
-    <p id="userListTable"></p>
-</div>
 
 <button id="deleteHistory">Delete History</button>
 
@@ -14,7 +11,11 @@
 <script>var room = "{{ room|safe }}"</script>
 <link rel="stylesheet" href="{{ url_for('static', filename='rooms.css') }}">
 
-<div class="messagingBox">
+
+
+
+
+<div class="gameBox">
 
     <div id="nameSubmission">
         <h2>Enter your name</h2>
@@ -23,11 +24,27 @@
         <button id="nameButton">Submit</button>
     </div>
 
-    <div id="messages">
-        <h2 id="usersname"></h2>
-        <input type="text" name="messageBox" id="messageBox">
-        <button id="sendMessageButton">Send message</button>
-        <p class="messagingBox" id="messagesList"></p>
+    <div class="cardBox" id="cardBox">
+        <div class="grid-container">
+            <div class="grid-item" id="card">1</div>
+            <div class="grid-item" id="card">2</div>
+            <div class="grid-item" id="card">3</div>
+            <div class="grid-item" id="card">4</div>
+            <div class="grid-item" id="card">5</div>
+            <div class="grid-item" id="card">6</div>
+            <div class="grid-item" id="card">7</div>
+            <div class="grid-item" id="card">8</div>
+        </div>
+    </div>
+
+    <div class="chatBox" id="chatBox">
+        <p class="userListTable" id="userListTable"></p>
+        <p id="usersname"></p>
+        <div class="chatWindowBox">
+            <p class="chatMessagesBox" id="messagesList"></p>
+            <input type="text" name="messageBox" id="messageBox"> <button id="sendMessageButton">Send message</button>
+        </div>
+
     </div>
 
 </div>
