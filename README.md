@@ -21,6 +21,8 @@ $ docker run -it --rm --name cg \
 $ docker exec -it cg bash 
 ```
 
+Then, go to `localhost:5000` to see the website.
+
 Things to do:
 - [x] Create Container environment
 - [x] Make basic websocket in Flask
