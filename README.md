@@ -7,7 +7,7 @@ The goal of this project is to build a multiplayer card game using websockets.
 ```console
 $ docker-compose up # to run the website
 $ docker-compose up --build # if there are changes to the Dockerfile or requirements.txt
-$ docker-compose down # to close the website fully
+$ docker-compose down # to close the website fully and delete database
 ```
 
 
