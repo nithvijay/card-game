@@ -18,7 +18,7 @@ $ docker run -it --rm --name cg \
     --mount type=bind,source="$(pwd)",target=/code \
     -p 5000:5000 \
     cardgame
-$ docker exec -it cg bash 
+$ docker exec -it cg bash # for debugging
 ```
 
 Then, go to `localhost:5000` to see the website.
