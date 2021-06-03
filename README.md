@@ -56,3 +56,13 @@ $ docker exec -it redis bash
 $ redis-cli
 ```
 
+Database Notes:
+
+Name | Description | Data Type | Redis Command
+---|---|---|---
+`card_index` | Index for cards | Set | `SMEMBERS`
+`set_of_rooms` | Index for rooms | Set | `SMEMBERS`
+`room_data:<ASDF>` | 
+`room_keys:<ASDF>` | SIDs of users in the room | Set | `SMEMBERS`
+`card:<Sword>` | Attributes for card | Many Fields | `HGET`/`HGETALL`
+`<nXM8LkLfjGYCs0dlAAAJ>` | Name of given sid | Single Field | `GET` 

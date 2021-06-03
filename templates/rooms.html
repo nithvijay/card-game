@@ -8,11 +8,13 @@
 <!-- <button id="connectDisconnect">Disconnect</button>
 <br> -->
 
-<script>var room = "{{ room|safe }}"</script>
+<script>
+var room = "{{ room|safe }}"
+</script>
 <link rel="stylesheet" href="{{ url_for('static', filename='rooms.css') }}">
 
 
-
+<p id='sid'>SID</p>
 
 
 <div class="gameBox">
@@ -25,16 +27,12 @@
     </div>
 
     <div class="cardBox" id="cardBox">
-        <div class="grid-container">
-            <div class="grid-item" id="card">1</div>
-            <div class="grid-item" id="card">2</div>
-            <div class="grid-item" id="card">3</div>
-            <div class="grid-item" id="card">4</div>
-            <div class="grid-item" id="card">5</div>
-            <div class="grid-item" id="card">6</div>
-            <div class="grid-item" id="card">7</div>
-            <div class="grid-item" id="card">8</div>
+        <div class="grid-container" id="cardBoxContainer">
         </div>
+    </div>
+
+    <div class="gameWindow" id="gameWindow">
+        <button id='gameStartButton'>Click here to start game</button>
     </div>
 
     <div class="chatBox" id="chatBox">

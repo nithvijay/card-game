@@ -53,8 +53,16 @@ table, th {
     text-align: center;
 } */
 
+.playing-container {
+    border: 1px solid;
+    padding: 1px;
+    margin: 5px;
+}
+
+
 .grid-container {
     display: grid;
+    border: 1px solid;
     grid-template-columns: repeat(auto-fit, minmax(9em , 1fr));;
     grid-gap: 1px;
     padding: 1px;
@@ -66,4 +74,8 @@ table, th {
     padding: 1em;
     height: 5em;
     text-align: center;
+}
+
+.own:hover {
+    background-color: lightblue;
 }
