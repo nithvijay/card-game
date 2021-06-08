@@ -21,17 +21,6 @@ $ docker run -it --rm --name cg \
 $ docker exec -it cg bash 
 ```
 
-Things to do:
-- [x] Create Container environment
-- [x] Make basic websocket in Flask
-- [ ] Connect the database
-- [ ] Produce chat application for game
-- [ ] Make basic card game
-- [ ] Do Vue.js sample project
-- [ ] Link Flask backend and Vue.js frontend
-- [ ] Make fully featured card game
-- [ ] Deploy to GCP or Heroku
-
 ## Tutorials
 ### Websockets
 - `Flask-SocketIO` - https://flask-socketio.readthedocs.io/en/latest/
@@ -49,8 +38,9 @@ Things to do:
 - Redis Docker Image - https://hub.docker.com/_/redis
 
 
+# Notes
 
-**Redis Notes**
+## **Redis Notes**
 ```console
 $ docker exec -it redis bash
 $ redis-cli
@@ -63,6 +53,20 @@ Name | Description | Data Type | Redis Command
 `card_index` | Index for cards | Set | `SMEMBERS`
 `set_of_rooms` | Index for rooms | Set | `SMEMBERS`
 `room_data:<ASDF>` | 
-`room_keys:<ASDF>` | SIDs of users in the room | Set | `SMEMBERS`
+`room_members:<ASDF>` | SIDs of users in the room | Set | `SMEMBERS`
 `card:<Sword>` | Attributes for card | Many Fields | `HGET`/`HGETALL`
 `<nXM8LkLfjGYCs0dlAAAJ>` | Name of given sid | Single Field | `GET` 
+
+
+### What `room_data` contains
+
+```python
+room_data = {
+    userCards=[[<Card Object>], [...], ...]
+    centerCards=[<Card Object>, ...]
+    userNames=[], # ordered
+    userSIDs=[], 
+    scores={},
+    turn=...
+}
+```
