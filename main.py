@@ -10,7 +10,8 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, send
 eventlet.monkey_patch()
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*", message_queue="redis://redis:6379", async_handlers=True, async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*",
+                    message_queue="redis://redis:6379", async_handlers=True, async_mode='eventlet')
 r = redis.Redis(host='redis', port=6379, db=0, decode_responses=True)
 
 
@@ -93,6 +94,7 @@ def connect():
 def delete_history(data):
     for key in r.keys():
         r.delete(key)
+    initial_input(cards)
 
 
 ################
@@ -105,19 +107,21 @@ def get_room_data(room):
     return json.loads(r.get(f"roomData:{room}"))
 
 
-def set_room_data(room, roomData):
-    r.set(f"roomData:{room}", json.dumps(roomData))
+def set_room_data(room, room_data):
+    r.set(f"roomData:{room}", json.dumps(room_data))
 
 
 @socketio.on('start_game')
 def start_game(room):
     emit("game_started", "", room=room)
-    roomData = dict()
+    room_data = dict()
     userSIDs = [member for member in list(r.smembers(f"room_members:{room}"))]
     userNames = [r.get(sid) for sid in userSIDs]
     scores = [0 for _ in userSIDs]
+    playedThisTurn = [False for _ in userSIDs]
     turn = 0
     centerCards = []
+    centerCardsPlayerIndex = []
     userCards = []
 
     r.set(f"room_card_id:{room}", CARD_START_ID)
@@ -135,16 +139,79 @@ def start_game(room):
             player_cards.append(card.copy())
         userCards.append(player_cards)
 
-    roomData = {
+    room_data = {
         "userCards": userCards,
         "centerCards": centerCards,
         "userNames": userNames,  # ordered
         "userSIDs": userSIDs,
         "scores": scores,
-        "turn": turn
+        "turn": turn,
+        "playedThisTurn": playedThisTurn,
+        "centerCardsPlayerIndex": centerCardsPlayerIndex
     }
-    set_room_data(room, roomData)
-    emit("update_game_state", roomData, room=room)
+    set_room_data(room, room_data)
+    emit("update_game_state", room_data, room=room)
+
+
+@socketio.on('played card')
+def played_card(data):
+    id = data['id']
+    room = data['room']
+
+    room_data = get_room_data(room)
+    userCards = room_data['userCards']
+    playedThisTurn = room_data['playedThisTurn']
+
+    user_index = get_user_played_card(userCards, id)
+
+    if not playedThisTurn[user_index]:
+        players_cards = userCards[user_index]
+        played_card_index = [i for i, card in enumerate(
+            players_cards) if card['id'] == id][0]
+
+        # TODO: Come up with a better system
+        room_data['centerCards'].append(players_cards[played_card_index])
+        room_data['centerCardsPlayerIndex'].append(user_index)
+        room_data['userCards'][user_index].pop(played_card_index)
+        room_data['userCards'][user_index].append(gen_random_card(room))
+        room_data['playedThisTurn'][user_index] = True
+
+        set_room_data(room, room_data)
+        emit("update_game_state", room_data, room=room)
+
+    if all(playedThisTurn):
+        # handle game condition
+        winner_index = get_winner(
+            centerCards=room_data['centerCards'],
+            centerCardsPlayerIndex=room_data['centerCardsPlayerIndex']
+        )
+        room_data['scores'][winner_index] += 1
+        room_data['centerCards'] = []
+        room_data['centerCardsPlayerIndex'] = []
+        room_data['playedThisTurn'] = [False for _ in playedThisTurn]
+
+        set_room_data(room, room_data)
+        emit("update_game_state", room_data, room=room)
+
+
+def get_user_played_card(userCards, id):
+    for i, cards in enumerate(userCards):
+        if id in [card['id'] for card in cards]:
+            return i  # index of user who played the card
+
+
+def get_winner(centerCards, centerCardsPlayerIndex):
+    attacks = [int(card['attack']) for card in centerCards]
+    return centerCardsPlayerIndex[attacks.index(max(attacks))]  # index of winner card
+
+
+def gen_random_card(room):
+    cards = [r.hgetall(f"card:{key}") for key in list(r.smembers("card_index"))]
+    card_id = r.get(f"room_card_id:{room}")
+    r.set(f"room_card_id:{room}", int(card_id) + 1)
+    card = random.choice(cards)
+    card['id'] = card_id
+    return card
 
 
 if __name__ == '__main__':
