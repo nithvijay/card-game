@@ -6,8 +6,8 @@ import PlayingArea from "./PlayingArea";
 
 const Main = () => {
   const socket = useContext(SocketContext);
-  const [username, setUsername] = useState("");
-  const [room, setRoom] = useState("");
+  const [username, setUsername] = useState("Test");
+  const [room, setRoom] = useState("ABCD");
   const [enteredRoom, setEnteredRoom] = useState(false);
   const [startedGame, setStartedGame] = useState(false);
 
@@ -43,7 +43,6 @@ const Main = () => {
    */
   const handleStartedGame = useCallback(() => {
     setStartedGame(true);
-    console.log("Does this happen")
   }, []);
 
   useEffect(() => {
@@ -53,23 +52,44 @@ const Main = () => {
   }, [handleStartedGame, socket]);
 
   return (
-    <div>
+    <div className="container">
       {!enteredRoom && (
-        <div className="container">
-          <div className="row">
-            <label>Username</label>
-            <input
-              value={username}
-              name="username"
-              onChange={(e) => onChangeUserName(e)}
-            />
-          </div>
-          <div className="row">
-            <label>Room</label>
-            <input value={room} name="room" onChange={(e) => onChangeRoom(e)} />
-          </div>
-          <div className="row">
-            <button onClick={() => onClick()}>Enter Room</button>
+        <div className="card mt-5 col-sm-8 offset-sm-2">
+          <div className="card-body">
+            <div className="row m-3 align-items-center">
+              <div className="col-sm-4">
+                <label className="col-form-label fs-2">Username</label>
+              </div>
+              <div className="col-sm-8">
+                <input
+                  className="form-control form-control-lg"
+                  value={username}
+                  name="username"
+                  onChange={(e) => onChangeUserName(e)}
+                />
+              </div>
+            </div>
+            <div className="row m-3 align-items-center">
+              <div className="col-sm-4">
+                <label className="col-form-label fs-2">Room</label>
+              </div>
+              <div className="col-sm-8">
+                <input
+                  className="form-control form-control-lg"
+                  value={room}
+                  name="room"
+                  onChange={(e) => onChangeRoom(e)}
+                />
+              </div>
+            </div>
+            <div className="row m-3">
+              <button
+                className="btn btn-primary btn-lg col-md-4 offset-sm-4"
+                onClick={() => onClick()}
+              >
+                Enter Room
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -82,7 +102,8 @@ const Main = () => {
           onStartGame={onStartGame}
         />
       )}
-      {startedGame && <PlayingArea />}
+
+      {startedGame && <PlayingArea room={room} />}
       <button onClick={() => onErase()}>Erase</button>
     </div>
   );

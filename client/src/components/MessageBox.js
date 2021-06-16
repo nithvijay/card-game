@@ -14,7 +14,6 @@ const MessageBox = ({ username, room, startedGame, onStartGame }) => {
   const handleMessage = useCallback(
     (data) => {
       setMessages([...messages, data["message"]]);
-      console.log(messages);
     },
     [messages]
   );
@@ -28,12 +27,9 @@ const MessageBox = ({ username, room, startedGame, onStartGame }) => {
   /**
    * socket.io - update_room_members
    */
-  const handleUpdateRoom = useCallback(
-    (data) => {
-      setRoomMembers(data["room_occupants"]);
-    },
-    []
-  );
+  const handleUpdateRoom = useCallback((data) => {
+    setRoomMembers(data["room_occupants"]);
+  }, []);
 
   useEffect(() => {
     socket.on("update_room_members", handleUpdateRoom);
@@ -61,7 +57,8 @@ const MessageBox = ({ username, room, startedGame, onStartGame }) => {
     setMessage(e.target.value);
   };
 
-  const onClick = () => {
+  const onFormSubmit = (e) => {
+    e.preventDefault();
     if (message !== "") {
       socket.emit("message", {
         room: room,
@@ -75,31 +72,49 @@ const MessageBox = ({ username, room, startedGame, onStartGame }) => {
   };
 
   return (
-    <div className="container">
-      {messages.length > 0 &&
-        messages.map((msg, index) => (
-          <div className="row" key={index}>
-            <p>{msg}</p>
-          </div>
-        ))}
+    <div className="card mt-5 col-sm-8 offset-sm-2">
+      <div className="row p-3">
+        <div className="col-sm-9">
+          <div className="card p-3">
+            <div
+              className="overflow-scroll"
+              style={{ height: "36vh", backgroundColor: "aqua" }}
+            >
+              {messages.length > 0 &&
+                messages.map((msg, index) => <p key={index}>{msg}</p>)}
+            </div>
 
-      <div className="row">
-        <input
-          value={message}
-          name="message"
-          onChange={(e) => onChangeMessage(e)}
-        />
-        <button onClick={() => onClick()}>Send Message</button>
+            <form className="input-group" onSubmit={(e) => onFormSubmit(e)}>
+              <input
+                className="form-control"
+                value={message}
+                name="message"
+                onChange={(e) => onChangeMessage(e)}
+              />
+              <button className="btn btn-outline-secondary" type="submit">
+                Send Message
+              </button>
+            </form>
+          </div>
+        </div>
+        <div className="col-sm-3">
+          <div className="card">
+            <div className="card-header">People in the Room</div>
+            <div className="card-body">
+              <ul>
+                {roomMembers.map((member, index) => (
+                  <li key={index}>{member}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <strong>People in the Room</strong>
-      <ul>
-        {roomMembers.map((member, index) => (
-          <li key={index}>{member}</li>
-        ))}
-      </ul>
       {!startedGame && (
-        <button onClick={() => onStartGame()}>Start Game</button>
+        <button className="btn btn-primary" onClick={() => onStartGame()}>
+          Start Game
+        </button>
       )}
     </div>
   );

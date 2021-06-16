@@ -2,23 +2,24 @@ import { useState, useCallback, useEffect, useContext } from "react";
 import { SocketContext } from "../context/socket";
 import PlayedCardsArea from "./PlayedCardsArea";
 import CardContainer from "./CardContainer";
+import Scoreboard from "./Scoreboard";
 
-const PlayingArea = () => {
+const PlayingArea = ({ room }) => {
   const socket = useContext(SocketContext);
   const socketID = socket.id;
-  const [cardsInHand, setCards] = useState({
-    cards: ["Sword", "Gun", "Knife", "Fist"],
-  });
 
   const [gameState, setGameState] = useState({});
   const [gameLoaded, setGameLoaded] = useState(false);
+
+  const onCardClick = (id) => {
+    socket.emit("played card", { id: id, room: room });
+  };
 
   /**
    * socket.io - gameState
    */
   const handleGameState = useCallback((data) => {
     setGameState(data);
-    console.log(data);
     setGameLoaded(true);
   }, []);
 
@@ -29,9 +30,13 @@ const PlayingArea = () => {
   }, [handleGameState, socket]);
 
   return (
-    <div>
+    <div className="card p-3">
       {gameLoaded && (
-        <div className="playing-container">
+        <>
+          <Scoreboard
+            userNames={gameState.userNames}
+            scores={gameState.scores}
+          />
           <PlayedCardsArea playedCards={gameState.centerCards} />
 
           <CardContainer
@@ -40,8 +45,10 @@ const PlayingArea = () => {
             sids={gameState.userSIDs}
             names={gameState.userNames}
             turn={gameState.turn}
+            onCardClick={onCardClick}
           />
-        </div>
+          
+        </>
       )}
     </div>
   );
