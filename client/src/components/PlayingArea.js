@@ -30,14 +30,19 @@ const PlayingArea = ({ room }) => {
   }, [handleGameState, socket]);
 
   return (
-    <div className="card p-3">
+    <div className="card mt-2 p-3">
       {gameLoaded && (
         <>
           <Scoreboard
             userNames={gameState.userNames}
             scores={gameState.scores}
           />
-          <PlayedCardsArea playedCards={gameState.centerCards} />
+          <div
+            className="d-flex justify-content-center"
+            style={{ height: "17rem"}}
+          >
+            <PlayedCardsArea playedCards={gameState.centerCards} />
+          </div>
 
           <CardContainer
             cards={gameState.userCards}
@@ -47,7 +52,6 @@ const PlayingArea = ({ room }) => {
             turn={gameState.turn}
             onCardClick={onCardClick}
           />
-          
         </>
       )}
     </div>

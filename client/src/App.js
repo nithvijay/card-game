@@ -3,7 +3,7 @@ import Main from "./components/Main";
 
 const App = () => {
   return (
-    <div className="container">
+    <div>
       <SocketContext.Provider value={socket}>
         <Main />
       </SocketContext.Provider>

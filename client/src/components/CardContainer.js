@@ -8,10 +8,10 @@ const CardContainer = ({ cards, sid, sids, names, turn, onCardClick }) => {
 
   return (
     <div className="card">
-      <div className="d-flex flex-wrap">
+      <div className="d-flex flex-wrap justify-content-center">
         {userCards.map((card, index) => (
           <Card
-            key={index}
+            key={card.id}
             text={card.text}
             attack={card.attack}
             cost={card.cost}
@@ -20,8 +20,8 @@ const CardContainer = ({ cards, sid, sids, names, turn, onCardClick }) => {
           />
         ))}
       </div>
-      <div className="d-flex flex-wrap">
-        {otherCards.map((card) => card.map((i) => <CardUnknown id={""} />))}
+      <div className="d-flex flex-wrap justify-content-center">
+        {otherCards.map((card) => card.map((i) => <CardUnknown key={i.id} id={""} />))}
       </div>
     </div>
   );

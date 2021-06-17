@@ -10,6 +10,8 @@ const Main = () => {
   const [room, setRoom] = useState("ABCD");
   const [enteredRoom, setEnteredRoom] = useState(false);
   const [startedGame, setStartedGame] = useState(false);
+  const [validatedMessage, setValidatedMessage] = useState("");
+  const [validated, setValidated] = useState(true);
 
   const onChangeRoom = (e) => {
     setRoom(e.target.value);
@@ -18,9 +20,9 @@ const Main = () => {
     setUsername(e.target.value);
   };
 
-  const onClick = () => {
+  const onClick = (e) => {
+    e.preventDefault();
     if ((room.length === 4) & (username.length !== 0)) {
-      setEnteredRoom(true);
       socket.emit("join", { username: username, room: room });
     } else {
       alert("Room Code must be 4 characters");
@@ -29,6 +31,7 @@ const Main = () => {
 
   const onErase = () => {
     setEnteredRoom(false);
+    setStartedGame(false);
     setRoom("");
     setUsername("");
     socket.emit("delete_history", {});
@@ -51,45 +54,69 @@ const Main = () => {
     return () => socket.off("game_started", handleStartedGame);
   }, [handleStartedGame, socket]);
 
+  /**
+   * socket.io - entered_room
+   */
+  const handleEnteredRoom = useCallback((data) => {
+    if (data !== "T") {
+      setValidatedMessage(data);
+      setValidated(false);
+    } else {
+      setEnteredRoom(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    socket.on("entered_room", handleEnteredRoom);
+
+    return () => socket.off("entered_room", handleEnteredRoom);
+  }, [handleEnteredRoom, socket]);
+
   return (
-    <div className="container">
+    <div className="container-sm" style={{ maxWidth: "100%" }}>
       {!enteredRoom && (
-        <div className="card mt-5 col-sm-8 offset-sm-2">
+        <div className="card mt-5">
           <div className="card-body">
-            <div className="row m-3 align-items-center">
-              <div className="col-sm-4">
-                <label className="col-form-label fs-2">Username</label>
+            <form onSubmit={(e) => onClick(e)}>
+              <div className="row m-3 align-items-center">
+                <div className="col-sm-4">
+                  <label className="col-form-label fs-2">Username</label>
+                </div>
+                <div className="col-sm-8">
+                  <input
+                    className={
+                      "form-control form-control-lg " +
+                      (!validated && "is-invalid")
+                    }
+                    value={username}
+                    name="username"
+                    onChange={(e) => onChangeUserName(e)}
+                  />
+                  <span style={{ color: "red" }}>{validatedMessage}</span>
+                </div>
               </div>
-              <div className="col-sm-8">
-                <input
-                  className="form-control form-control-lg"
-                  value={username}
-                  name="username"
-                  onChange={(e) => onChangeUserName(e)}
-                />
+              <div className="row m-3 align-items-center">
+                <div className="col-sm-4">
+                  <label className="col-form-label fs-2">Room</label>
+                </div>
+                <div className="col-sm-8">
+                  <input
+                    className="form-control form-control-lg"
+                    value={room}
+                    name="room"
+                    onChange={(e) => onChangeRoom(e)}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="row m-3 align-items-center">
-              <div className="col-sm-4">
-                <label className="col-form-label fs-2">Room</label>
+              <div className="row m-3">
+                <button
+                  className="btn btn-primary btn-lg col-md-4 offset-sm-4"
+                  type="submit"
+                >
+                  Enter Room
+                </button>
               </div>
-              <div className="col-sm-8">
-                <input
-                  className="form-control form-control-lg"
-                  value={room}
-                  name="room"
-                  onChange={(e) => onChangeRoom(e)}
-                />
-              </div>
-            </div>
-            <div className="row m-3">
-              <button
-                className="btn btn-primary btn-lg col-md-4 offset-sm-4"
-                onClick={() => onClick()}
-              >
-                Enter Room
-              </button>
-            </div>
+            </form>
           </div>
         </div>
       )}

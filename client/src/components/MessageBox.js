@@ -65,6 +65,7 @@ const MessageBox = ({ username, room, startedGame, onStartGame }) => {
         username: username,
         message: message,
       });
+      console.log(message);
       setMessage("");
     } else {
       alert("Please Add A Message");
@@ -72,13 +73,13 @@ const MessageBox = ({ username, room, startedGame, onStartGame }) => {
   };
 
   return (
-    <div className="card mt-5 col-sm-8 offset-sm-2">
+    <div className="card mt-5">
       <div className="row p-3">
         <div className="col-sm-9">
           <div className="card p-3">
             <div
               className="overflow-scroll"
-              style={{ height: "36vh", backgroundColor: "aqua" }}
+              style={{ height: "36vh"}}
             >
               {messages.length > 0 &&
                 messages.map((msg, index) => <p key={index}>{msg}</p>)}

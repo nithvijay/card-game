@@ -37,27 +37,33 @@ def on_join(data):  # This is called in chatapp.js when the user submits a name 
     user = data['username']
     room = data['room']
     sid = request.sid
-    join_room(room)
 
-    # index of keys
-    r.sadd("set_of_rooms", room)  # set named set_of_rooms contains all rooms
-    # so users can only be part of one room, potentially slow with large number of rooms, looping through all rooms to see
-    for key in list(r.smembers("set_of_rooms")):
-        if r.srem(f"room_members:{key}", sid):
-            leave_room(key)
-            emit('message', {
-                 'message': f"{user} has left Room {key}"}, room=key)
+    if r.get(f"game_started:{room}") == "T":
+        emit('entered_room', "Game has already started")
+    elif user in set(r.get(member) for member in list(r.smembers(f"room_members:{room}"))):
+        emit('entered_room', "Username taken in that room")
+    else:
+        join_room(room)
+        emit('entered_room', "T")
 
-    # set named room_members:ASDF contains sid of users in the room
-    r.sadd(f"room_members:{room}", sid)
-    r.set(name=sid, value=user)  # key-value pair for sid and user name
+        # index of keys
+        r.sadd("set_of_rooms", room)  # set named set_of_rooms contains all rooms
+        # so users can only be part of one room, potentially slow with large number of rooms, looping through all rooms to see
+        for key in list(r.smembers("set_of_rooms")):
+            if r.srem(f"room_members:{key}", sid):
+                leave_room(key)
+                emit('message', {
+                    'message': f"{user} has left Room {key}"}, room=key)
 
-    emit('message_history', {'message_history': r.lrange(
-        f"room_message_history:{room}", 0, 1000)})
-    emit('message', {'message': f"{user} has entered Room {room}"}, room=room)
-    members = [r.get(member)
-               for member in list(r.smembers(f"room_members:{room}"))]
-    emit('update_room_members', {'room_occupants': members}, room=room)
+        # set named room_members:ASDF contains sid of users in the room
+        r.sadd(f"room_members:{room}", sid)
+        r.set(name=sid, value=user)  # key-value pair for sid and user name
+
+        emit('message_history', {'message_history': r.lrange(
+            f"room_message_history:{room}", 0, 1000)})
+        emit('message', {'message': f"{user} has entered Room {room}"}, room=room)
+        members = [r.get(member) for member in list(r.smembers(f"room_members:{room}"))]
+        emit('update_room_members', {'room_occupants': members}, room=room)
 
 
 @socketio.on("message")
@@ -114,6 +120,7 @@ def set_room_data(room, room_data):
 @socketio.on('start_game')
 def start_game(room):
     emit("game_started", "", room=room)
+    r.set(f"game_started:{room}", "T")
     room_data = dict()
     userSIDs = [member for member in list(r.smembers(f"room_members:{room}"))]
     userNames = [r.get(sid) for sid in userSIDs]
