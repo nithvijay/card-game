@@ -1,0 +1,15 @@
+/* @media (max-width: 1024px) {
+  .container {
+    max-width: 100%;
+    background-color: yellow;
+  }
+} */
+
+p {
+  border: 1px solid gainsboro;
+  border-radius: 5px;
+}
+
+.scorecard-player-score {
+  font-size: large;
+}

@@ -2,19 +2,22 @@
 {% block content %}
 <h1>Welcome to Room {{ room }}</h1>
 
-<div class="userList">
-    <p id="userListTable"></p>
-</div>
 
 <button id="deleteHistory">Delete History</button>
 
 <!-- <button id="connectDisconnect">Disconnect</button>
 <br> -->
 
-<script>var room = "{{ room|safe }}"</script>
+<script>
+var room = "{{ room|safe }}"
+</script>
 <link rel="stylesheet" href="{{ url_for('static', filename='rooms.css') }}">
 
-<div class="messagingBox">
+
+<p id='sid'>SID</p>
+
+
+<div class="gameBox">
 
     <div id="nameSubmission">
         <h2>Enter your name</h2>
@@ -23,11 +26,23 @@
         <button id="nameButton">Submit</button>
     </div>
 
-    <div id="messages">
-        <h2 id="usersname"></h2>
-        <input type="text" name="messageBox" id="messageBox">
-        <button id="sendMessageButton">Send message</button>
-        <p class="messagingBox" id="messagesList"></p>
+    <div class="cardBox" id="cardBox">
+        <div class="grid-container" id="cardBoxContainer">
+        </div>
+    </div>
+
+    <div class="gameWindow" id="gameWindow">
+        <button id='gameStartButton'>Click here to start game</button>
+    </div>
+
+    <div class="chatBox" id="chatBox">
+        <p class="userListTable" id="userListTable"></p>
+        <p id="usersname"></p>
+        <div class="chatWindowBox">
+            <p class="chatMessagesBox" id="messagesList"></p>
+            <input type="text" name="messageBox" id="messageBox"> <button id="sendMessageButton">Send message</button>
+        </div>
+
     </div>
 
 </div>

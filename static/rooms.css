@@ -1,17 +1,43 @@
-div.messagingBox {
+div.gameBox {
     border-style: solid;
     border-color: black;
     padding: 10px;
-}
-p.messagingBox {
-    border-style: dashed;
-    border-color: gray;
-    padding: 10px;
+    margin-left: 5%;
+    margin-right: 5%;
 }
 
-div.userList {
-    float: right;
+div.chatBox {
+    border-style: solid;
+    border-color: gray;
     padding: 10px;
+    margin: 5px;
+}
+
+div.cardBox {
+    border-style: solid;
+    border-color: gray;
+    padding: 10px;
+    margin: 5px;
+}
+
+div.chatWindowBox {
+    border-style: dashed;
+    border-color: silver;
+    padding: 10px;
+    margin: 5px;
+}
+
+p.chatMessagesBox {
+    border-style: dashed;
+    border-color: purple;
+    padding: 10px;
+    margin: 5px;
+}
+
+p.userListTable {
+    padding: 10px;
+    border-style: solid;
+    border-color: blue;
 }
 
 table, th {
@@ -19,3 +45,37 @@ table, th {
     border: 1px solid black;
     border-collapse: collapse;
   }
+
+/* .card {
+    width: 6em;
+    height: 5em;
+    border-style: dotted;
+    text-align: center;
+} */
+
+.playing-container {
+    border: 1px solid;
+    padding: 1px;
+    margin: 5px;
+}
+
+
+.grid-container {
+    display: grid;
+    border: 1px solid;
+    grid-template-columns: repeat(auto-fit, minmax(9em , 1fr));;
+    grid-gap: 1px;
+    padding: 1px;
+}
+
+.grid-item {
+    border: 1px solid;
+    width: 6em;
+    padding: 1em;
+    height: 5em;
+    text-align: center;
+}
+
+.own:hover {
+    background-color: lightblue;
+}

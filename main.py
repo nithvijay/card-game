@@ -1,134 +1,236 @@
 import datetime
+import json
+import random
 
 import eventlet
-from flask import Flask, redirect, render_template, request, url_for, jsonify, session
-from flask_socketio import SocketIO, emit, join_room, leave_room, send
 import redis
+from flask import Flask, request
+from flask_socketio import SocketIO, emit, join_room, leave_room, send
 
 eventlet.monkey_patch()
 
-
 app = Flask(__name__)
-socketio = SocketIO(app, message_queue="redis://redis:6379", async_handlers=True, async_mode='eventlet')
+socketio = SocketIO(app, cors_allowed_origins="*",
+                    message_queue="redis://redis:6379", async_handlers=True, async_mode='eventlet')
 r = redis.Redis(host='redis', port=6379, db=0, decode_responses=True)
 
 
-@app.route('/', methods=['GET', 'POST'])
-@app.route('/home', methods=['GET', 'POST'])
-def home(): # Users type the chat room they want to go to
-    if request.method == 'POST':
-        room = request.form['room']
-        return redirect(url_for('rooms', room=room))
-    else:
-        context = []
-        for key in r.scan_iter("room_keys:*"):
-            room = key.split(":")[1]
-            members = [r.get(member) for member in list(r.smembers(key))]
-            context.append(dict(
-                key=key,
-                members=members, #sets do not work nicely with iteration
-                size=r.scard(key),
-                peak=list(r.lrange(room, 0, 10))
-            ))
-        return render_template('index.html', rooms=context)
+def initial_input(cards):
+    for card in cards:
+        r.hset(f"card:{card['text']}", mapping=card)
+        # r.hmset(f"card:{card['text']}", ("text", card['text']), ('attack', card['attack']), ('cost', card['cost']))
+        r.sadd("card_index", card['text'])
 
-@app.route('/rooms/<room>')
-def rooms(room): #the chat room itself. The URL is what determines the chat room. Therefore, it is possible to bypass the home page entirely
-    return render_template('rooms.html', room=room)
 
-@app.route('/chat')
-def chat(): # Random template/testing page. Can be ignored
-    return render_template('chat.html')
+cards = [
+    {"text": "Sword", "attack": 3, "cost": 2},
+    {"text": "Pistol", "attack": 5, "cost": 3},
+    {"text": "Shotgun", "attack": 10, "cost": 5},
+    {"text": "Knife", "attack": 1, "cost": 1},
+]
 
-@app.route('/form', methods=['GET', 'POST'])
-def form(): # Random page testing forms and javascript in flask. Can be ignored
-    context = {}
-    if request.method == 'POST':
-        context['name'] = request.form['name']
-    return render_template('form.html', context=context)
+initial_input(cards)
 
-##################################
-#### Socket.io event handlers ####
-##################################
 
 @socketio.on('join')
-def on_join(data): # This is called in chatapp.js when the user submits a name in /rooms/<room>
+def on_join(data):  # This is called in chatapp.js when the user submits a name in /rooms/<room>
     user = data['username']
     room = data['room']
     sid = request.sid
-    join_room(room)
 
-    # index of keys
-    r.sadd(f"list_of_rooms", room) # set named list_of_rooms contains all rooms 
-    for key in r.scan_iter("room_keys:*"): # so users can only be part of one room, potentially slow with large number of rooms
-        if r.srem(key, sid):
-            old_room = key.split(":")[1]
-            leave_room(old_room)
-            emit('chat message', {'message': f"{user} has left Room {old_room}"}, room=old_room)
+    if r.get(f"game_started:{room}") == "T":
+        emit('entered_room', "Game has already started")
+    elif user in set(r.get(member) for member in list(r.smembers(f"room_members:{room}"))):
+        emit('entered_room', "Username taken in that room")
+    else:
+        join_room(room)
+        emit('entered_room', "T")
 
-    
-    r.sadd(f"room_keys:{room}", sid) # set named room_keys:ASDF contains sid of users in the room
-    r.set(name=sid, value=user) #key-value pair for sid and user name
+        # index of keys
+        # set named set_of_rooms contains all rooms
+        r.sadd("set_of_rooms", room)
+        # so users can only be part of one room, potentially slow with large number of rooms, looping through all rooms to see
+        for key in list(r.smembers("set_of_rooms")):
+            if r.srem(f"room_members:{key}", sid):
+                leave_room(key)
+                emit('message', {
+                    'message': f"{user} has left Room {key}"}, room=key)
 
-    emit('message_history', {'message_history': r.lrange(room, 0, 1000)})
-    emit('chat message', {'message': f"{user} has entered Room {room}"}, room=room)
-    members = [r.get(member) for member in list(r.smembers(f"room_keys:{room}"))]
-    emit('update_room', {'room_occupants': members}, room=room)
+        # set named room_members:ASDF contains sid of users in the room
+        r.sadd(f"room_members:{room}", sid)
+        r.set(name=sid, value=user)  # key-value pair for sid and user name
 
-@socketio.on('leave')
-def on_leave(data): # not sure when/if this is called; needs more research
-    username = data['username']
+        emit('message_history', {'message_history': r.lrange(
+            f"room_message_history:{room}", 0, 1000)})
+        emit('message', {
+             'message': f"{user} has entered Room {room}"}, room=room)
+        members = [r.get(member)
+                   for member in list(r.smembers(f"room_members:{room}"))]
+        emit('update_room_members', {'room_occupants': members}, room=room)
+
+
+@socketio.on("message")
+def on_message(data):
     room = data['room']
-    leave_room(room)
-    emit('chat message', {'message': f"{username} has left Room {room}"}, room=room)
-
-@socketio.on("chat")
-def handle_chat(data): #This is called in chatapp.js when the user sends a message to the room
-    room = data['room']
     username = data['username']
-    message = data['text']
+    message = data['message']
     to_send = f"{datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-5))).strftime('%I:%M:%S %p')} - {username}: {message}"
-    r.lpush(room, to_send)
+    r.lpush(f"room_message_history:{room}", to_send)
 
-    emit('debug', {'sid': request.sid, 'session': session.get('room')})
-    emit('chat message', {'message': to_send}, room=room)
+    # emit('debug', {'sid': request.sid, 'session': session.get('room')})
+    emit('message', {'message': to_send}, room=room)
+
 
 @socketio.on('disconnect')
 def on_disconnect():
     sid = request.sid
-    for key in r.scan_iter("room_keys:*"): #check which room the user left
-        if r.srem(key, sid):
-            room = key.split(":")[1]
-            emit('chat message', {'message': f"{r.get(sid)} has left Room {room}"}, room=room)
-            members = [r.get(member) for member in list(r.smembers(f"room_keys:{room}"))]
-            emit('update_room', {'room_occupants': members}, room=room)
+    for key in list(r.smembers("set_of_rooms")):
+        if r.srem(f"room_members:{key}", sid):  # check which room the user left
+            emit('message', {
+                 'message': f"{r.get(sid)} has left Room {key}"}, room=key)
+            members = [r.get(member) for member in list(
+                r.smembers(f"room_members:{key}"))]
+            emit('update_room_members', {'room_occupants': members}, room=key)
     r.delete(sid)
 
-@socketio.on('delete history')
+
+@socketio.on("connect")
+def connect():
+    print(f"{request.sid} connected.\n\n\n\n")
+
+
+@socketio.on('delete_history')
 def delete_history(data):
+    for key in r.keys():
+        r.delete(key)
+    initial_input(cards)
+
+
+################
+## Game Logic ##
+################
+CARD_START_ID = 0
+NUM_CARDS = 3
+WIN_SCORE = 10
+
+
+def get_room_data(room):
+    return json.loads(r.get(f"roomData:{room}"))
+
+
+def set_room_data(room, room_data):
+    r.set(f"roomData:{room}", json.dumps(room_data))
+
+
+@socketio.on('start_game')
+def start_game(room):
+    emit("game_started", "", room=room)
+    r.set(f"game_started:{room}", "T")
+    room_data = dict()
+    userSIDs = [member for member in list(r.smembers(f"room_members:{room}"))]
+    userNames = [r.get(sid) for sid in userSIDs]
+    scores = [0 for _ in userSIDs]
+    playedThisTurn = [False for _ in userSIDs]
+    turn = 0
+    centerCards = []
+    centerCardsPlayerIndex = []
+    userCards = []
+
+    r.set(f"room_card_id:{room}", CARD_START_ID)
+
+    cards = [r.hgetall(f"card:{key}")
+             for key in list(r.smembers("card_index"))]
+
+    for _ in userSIDs:
+        rand_cards = random.choices(cards, k=NUM_CARDS)
+        player_cards = []
+        for card in rand_cards:
+            card_id = r.get(f"room_card_id:{room}")
+            r.set(f"room_card_id:{room}", int(card_id) + 1)
+            card['id'] = card_id
+            player_cards.append(card.copy())
+        userCards.append(player_cards)
+
+    room_data = {
+        "userCards": userCards,
+        "centerCards": centerCards,
+        "userNames": userNames,  # ordered
+        "userSIDs": userSIDs,
+        "scores": scores,
+        "turn": turn,
+        "playedThisTurn": playedThisTurn,
+        "centerCardsPlayerIndex": centerCardsPlayerIndex
+    }
+    set_room_data(room, room_data)
+    emit("update_game_state", room_data, room=room)
+
+
+@socketio.on('played card')
+def played_card(data):
+    id = data['id']
     room = data['room']
-    r.delete(room)
 
-# @socketio.on('disconnecting')
-# def on_disconnect():
-#     emit('chat message', {'message': "someone is leaving, but hasn't left yet"}, broadcast=True)
+    room_data = get_room_data(room)
+    userCards = room_data['userCards']
+    playedThisTurn = room_data['playedThisTurn']
+
+    user_index = get_user_played_card(userCards, id)
+
+    if not playedThisTurn[user_index]:
+        players_cards = userCards[user_index]
+        played_card_index = [i for i, card in enumerate(
+            players_cards) if card['id'] == id][0]
+
+        # TODO: Come up with a better system
+        room_data['centerCards'].append(players_cards[played_card_index])
+        room_data['centerCardsPlayerIndex'].append(user_index)
+        room_data['userCards'][user_index].pop(played_card_index)
+        room_data['userCards'][user_index].append(gen_random_card(room))
+        room_data['playedThisTurn'][user_index] = True
+
+        set_room_data(room, room_data)
+        emit("update_game_state", room_data, room=room)
+
+    if all(playedThisTurn):
+        # handle game condition
+        winner_index = get_winner(
+            centerCards=room_data['centerCards'],
+            centerCardsPlayerIndex=room_data['centerCardsPlayerIndex']
+        )
+        room_data['scores'][winner_index] += 1
+        room_data['centerCards'] = []
+        room_data['centerCardsPlayerIndex'] = []
+        room_data['playedThisTurn'] = [False for _ in playedThisTurn]
+
+        set_room_data(room, room_data)
+        emit("update_game_state", room_data, room=room)
+
+        if room_data['scores'][winner_index] == WIN_SCORE:
+            emit("win_game", room_data['userNames'][winner_index], room=room)
+            r.set(f"game_started:{room}", "F")
 
 
-# @socketio.on('message')
-# def handle_message(message):
-#     send(f"You said: {message}")
-
-# @socketio.on('json')
-# def handle_json(json):
-#     send(json, json=True)
-
-# @socketio.on('my event')
-# def handle_my_custom_event(json):
-#     send("hello!")
+def get_user_played_card(userCards, id):
+    for i, cards in enumerate(userCards):
+        if id in [card['id'] for card in cards]:
+            return i  # index of user who played the card
 
 
+def get_winner(centerCards, centerCardsPlayerIndex):
+    attacks = [int(card['attack']) for card in centerCards]
+    # index of winner card
+    return centerCardsPlayerIndex[attacks.index(max(attacks))]
 
 
+def gen_random_card(room):
+    cards = [r.hgetall(f"card:{key}")
+             for key in list(r.smembers("card_index"))]
+    card_id = r.get(f"room_card_id:{room}")
+    r.set(f"room_card_id:{room}", int(card_id) + 1)
+    card = random.choice(cards)
+    card['id'] = card_id
+    return card
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     socketio.run(app, debug=True, host='0.0.0.0')
