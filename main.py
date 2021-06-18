@@ -47,7 +47,8 @@ def on_join(data):  # This is called in chatapp.js when the user submits a name 
         emit('entered_room', "T")
 
         # index of keys
-        r.sadd("set_of_rooms", room)  # set named set_of_rooms contains all rooms
+        # set named set_of_rooms contains all rooms
+        r.sadd("set_of_rooms", room)
         # so users can only be part of one room, potentially slow with large number of rooms, looping through all rooms to see
         for key in list(r.smembers("set_of_rooms")):
             if r.srem(f"room_members:{key}", sid):
@@ -61,8 +62,10 @@ def on_join(data):  # This is called in chatapp.js when the user submits a name 
 
         emit('message_history', {'message_history': r.lrange(
             f"room_message_history:{room}", 0, 1000)})
-        emit('message', {'message': f"{user} has entered Room {room}"}, room=room)
-        members = [r.get(member) for member in list(r.smembers(f"room_members:{room}"))]
+        emit('message', {
+             'message': f"{user} has entered Room {room}"}, room=room)
+        members = [r.get(member)
+                   for member in list(r.smembers(f"room_members:{room}"))]
         emit('update_room_members', {'room_occupants': members}, room=room)
 
 
@@ -107,6 +110,8 @@ def delete_history(data):
 ## Game Logic ##
 ################
 CARD_START_ID = 0
+NUM_CARDS = 3
+WIN_SCORE = 10
 
 
 def get_room_data(room):
@@ -137,7 +142,7 @@ def start_game(room):
              for key in list(r.smembers("card_index"))]
 
     for _ in userSIDs:
-        rand_cards = random.choices(cards, k=3)
+        rand_cards = random.choices(cards, k=NUM_CARDS)
         player_cards = []
         for card in rand_cards:
             card_id = r.get(f"room_card_id:{room}")
@@ -200,6 +205,10 @@ def played_card(data):
         set_room_data(room, room_data)
         emit("update_game_state", room_data, room=room)
 
+        if room_data['scores'][winner_index] == WIN_SCORE:
+            emit("win_game", room_data['userNames'][winner_index], room=room)
+            r.set(f"game_started:{room}", "F")
+
 
 def get_user_played_card(userCards, id):
     for i, cards in enumerate(userCards):
@@ -209,11 +218,13 @@ def get_user_played_card(userCards, id):
 
 def get_winner(centerCards, centerCardsPlayerIndex):
     attacks = [int(card['attack']) for card in centerCards]
-    return centerCardsPlayerIndex[attacks.index(max(attacks))]  # index of winner card
+    # index of winner card
+    return centerCardsPlayerIndex[attacks.index(max(attacks))]
 
 
 def gen_random_card(room):
-    cards = [r.hgetall(f"card:{key}") for key in list(r.smembers("card_index"))]
+    cards = [r.hgetall(f"card:{key}")
+             for key in list(r.smembers("card_index"))]
     card_id = r.get(f"room_card_id:{room}")
     r.set(f"room_card_id:{room}", int(card_id) + 1)
     card = random.choice(cards)

@@ -10,6 +10,7 @@ const Main = () => {
   const [room, setRoom] = useState("ABCD");
   const [enteredRoom, setEnteredRoom] = useState(false);
   const [startedGame, setStartedGame] = useState(false);
+  const [gameWinner, setGameWinner] = useState("");
   const [validatedMessage, setValidatedMessage] = useState("");
   const [validated, setValidated] = useState(true);
 
@@ -72,6 +73,20 @@ const Main = () => {
     return () => socket.off("entered_room", handleEnteredRoom);
   }, [handleEnteredRoom, socket]);
 
+  /**
+   * socket.io - win_game
+   */
+  const handleWinGame = useCallback((data) => {
+    setStartedGame(false);
+    setGameWinner(data);
+  }, []);
+
+  useEffect(() => {
+    socket.on("win_game", handleWinGame);
+
+    return () => socket.off("win_game", handleWinGame);
+  }, [handleWinGame, socket]);
+
   return (
     <div className="container-sm" style={{ maxWidth: "100%" }}>
       {!enteredRoom && (
@@ -128,6 +143,10 @@ const Main = () => {
           startedGame={startedGame}
           onStartGame={onStartGame}
         />
+      )}
+
+      {gameWinner.length > 0 && (
+        <div className="card p-2 m-2">{gameWinner} won!</div>
       )}
 
       {startedGame && <PlayingArea room={room} />}
