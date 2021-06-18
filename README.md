@@ -1,6 +1,6 @@
 # Websockets Card Game
 
-The goal of this project is to build a multiplayer card game using websockets.
+The goal of this project is to build a multiplayer card game using Socket.io.
 
 ## Running the code
 
@@ -10,16 +10,23 @@ $ docker-compose up --build # if there are changes to the Dockerfile or requirem
 $ docker-compose down # to close the website fully
 ```
 
+Then, go to `localhost:3000` to see the website
 
-Alternatively, build the environment manually
-```console
-$ docker build -t cardgame .
-$ docker run -it --rm --name cg \
-    --mount type=bind,source="$(pwd)",target=/code \
-    -p 5000:5000 \
-    cardgame
-$ docker exec -it cg bash 
-```
+> The container environment still needs work. The anonymous volumes used do not get deleted, so `docker system purge --volumes` needs to be done every once in a while.
+
+## Things to do:
+- [x] Create Container environment
+- [x] Make basic websocket in Flask
+- [x] Connect the database
+- [x] Produce chat application with React
+- [x] Make basic card game with React
+- [x] Containerize React app
+- [ ] Refine/refactor basic card game
+- [ ] Host basic card game with React frontend, Flask backend, and Redis database
+- [ ] Make fully featured card game
+- [ ] Deploy fully featured card game
+
+
 
 ## Tutorials
 ### Websockets
@@ -37,6 +44,10 @@ $ docker exec -it cg bash
 - Python Redis API - https://github.com/andymccurdy/redis-py
 - Redis Docker Image - https://hub.docker.com/_/redis
 
+### React
+- React Docs - https://reactjs.org/docs/getting-started.html
+- React Crash Course - https://www.youtube.com/watch?v=w7ejDZ8SWv8
+- Using the socket-io client - https://dev.to/bravemaster619/how-to-use-socket-io-client-correctly-in-react-app-o65
 
 # Notes
 
@@ -52,7 +63,7 @@ Name | Description | Data Type | Redis Command
 ---|---|---|---
 `card_index` | Index for cards | Set | `SMEMBERS`
 `set_of_rooms` | Index for rooms | Set | `SMEMBERS`
-`room_data:<ASDF>` | 
+`room_data:<ASDF>` | All game data | Single Field | `GET`
 `room_members:<ASDF>` | SIDs of users in the room | Set | `SMEMBERS`
 `card:<Sword>` | Attributes for card | Many Fields | `HGET`/`HGETALL`
 `<nXM8LkLfjGYCs0dlAAAJ>` | Name of given sid | Single Field | `GET` 
@@ -62,11 +73,15 @@ Name | Description | Data Type | Redis Command
 
 ```python
 room_data = {
-    userCards=[[<Card Object>], [...], ...]
-    centerCards=[<Card Object>, ...]
-    userNames=[], # ordered
+    userCards=[[<Card Object>], [...], ...] 
+    centerCards=[<Card Object>, ...] # unordered/based on centerCardsPlayerIndex
+    userNames=[],
     userSIDs=[], 
     scores={},
-    turn=...
+    turn=..., # unused
+    playedThisTurn: [],
+    centerCardsPlayerIndex: []
 }
 ```
+
+The keys which have lists as values (besides `centerCards`) are ordered, meaning that each index corresponds to a single player.
