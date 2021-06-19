@@ -2,13 +2,13 @@ version: '3.9'
 
 services:
   backend:
-    build: .
+    build: ./server/
     command: python main.py
     container_name: cg_backend
     ports: 
       - "5000:5000"
     volumes: 
-      - .:/code
+      - ./server/:/code
     depends_on: 
       - redis
   client:
