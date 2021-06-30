@@ -7,19 +7,19 @@ import PlayingArea from "./PlayingArea";
 
 const Main = () => {
   const socket = useContext(SocketContext);
-  const [username, setUsername] = useState("Test");
-  const [room, setRoom] = useState("ABCD");
+  const [username, setUsername] = useState("");
+  const [room, setRoom] = useState("");
   const [enteredRoom, setEnteredRoom] = useState(false);
   const [startedGame, setStartedGame] = useState(false);
   const [gameWinner, setGameWinner] = useState("");
 
-  const onErase = () => {
-    setEnteredRoom(false);
-    setStartedGame(false);
-    setRoom("");
-    setUsername("");
-    socket.emit("delete_history", {});
-  };
+  // const onErase = () => {
+  //   setEnteredRoom(false);
+  //   setStartedGame(false);
+  //   setRoom("");
+  //   setUsername("");
+  //   socket.emit("delete_history", {});
+  // };
 
   const onStartGame = () => {
     socket.emit("start_game", room);
@@ -38,7 +38,6 @@ const Main = () => {
     return () => socket.off("game_started", handleStartedGame);
   }, [handleStartedGame, socket]);
 
-
   /**
    * socket.io - win_game
    */
@@ -52,6 +51,20 @@ const Main = () => {
 
     return () => socket.off("win_game", handleWinGame);
   }, [handleWinGame, socket]);
+
+  /**
+   * socket.io - debug
+   */
+  const debug = useCallback((data) => {
+    console.log("debug");
+    console.log(data);
+  }, []);
+
+  useEffect(() => {
+    socket.on("debug", debug);
+
+    return () => socket.off("debug", debug);
+  }, [debug, socket]);
 
   return (
     <div className="container-sm" style={{ maxWidth: "100%" }}>
@@ -79,7 +92,7 @@ const Main = () => {
       )}
 
       {startedGame && <PlayingArea room={room} />}
-      <button onClick={() => onErase()}>Erase</button>
+      {/* <button onClick={() => onErase()}>Erase</button> */}
     </div>
   );
 };

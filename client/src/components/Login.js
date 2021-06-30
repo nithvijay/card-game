@@ -31,7 +31,7 @@ const Login = ({ username, room, setUsername, setRoom, setEnteredRoom}) => {
     } else {
       setEnteredRoom(true);
     }
-  }, []);
+  }, [setEnteredRoom]);
 
   useEffect(() => {
     socket.on("entered_room", handleEnteredRoom);

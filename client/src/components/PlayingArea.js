@@ -3,12 +3,14 @@ import { SocketContext } from "../context/socket";
 import PlayedCardsArea from "./PlayedCardsArea";
 import CardContainer from "./CardContainer";
 import Scoreboard from "./Scoreboard";
+import EnergyBar from "./EnergyBar";
 
 const PlayingArea = ({ room }) => {
   const socket = useContext(SocketContext);
   const socketID = socket.id;
 
   const [gameState, setGameState] = useState({});
+  const [userIndex, setUserIndex] = useState(0);
   const [gameLoaded, setGameLoaded] = useState(false);
 
   const onCardClick = (id) => {
@@ -21,7 +23,10 @@ const PlayingArea = ({ room }) => {
   const handleGameState = useCallback((data) => {
     setGameState(data);
     setGameLoaded(true);
-  }, []);
+    console.log("handleGameState");
+    console.log(data);
+    setUserIndex(data['userSIDs'].indexOf(socketID));
+  }, [socketID]);
 
   useEffect(() => {
     socket.on("update_game_state", handleGameState);
@@ -37,12 +42,10 @@ const PlayingArea = ({ room }) => {
             userNames={gameState.userNames}
             scores={gameState.scores}
           />
-          <div
-            className="d-flex justify-content-center"
-            style={{ height: "17rem"}}
-          >
-            <PlayedCardsArea playedCards={gameState.centerCards} />
-          </div>
+
+          <PlayedCardsArea playedCards={gameState.centerCards} />
+
+          <EnergyBar level={gameState.userEnergies[userIndex]} maxLevel={gameState.maxEnergy} />
 
           <CardContainer
             cards={gameState.userCards}

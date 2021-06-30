@@ -2,7 +2,8 @@ import Card from "./Card"
 
 const PlayedCardsArea = ({ playedCards }) => {
   return (
-    <div>
+    <div className="d-flex justify-content-center"
+    style={{ height: "17rem"}}>
       {playedCards.map((card, index) => (
         <Card
           key={index}
