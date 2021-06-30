@@ -2,35 +2,19 @@ import datetime
 import json
 import random
 
+from utils import initial_input
 import eventlet
 import redis
 from flask import Flask, request
-from flask_socketio import SocketIO, emit, join_room, leave_room, send
+from flask_socketio import SocketIO, emit, join_room, leave_room
 
 eventlet.monkey_patch()
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*",
+socketio = SocketIO(app, cors_allowed_origins=["http://localhost:3000", "http://localhost:8080"],
                     message_queue="redis://redis:6379", async_handlers=True, async_mode='eventlet')
 r = redis.Redis(host='redis', port=6379, db=0, decode_responses=True)
-
-
-def initial_input(cards):
-    for card in cards:
-        r.hset(f"card:{card['text']}", mapping=card)
-        # r.hmset(f"card:{card['text']}", ("text", card['text']), ('attack', card['attack']), ('cost', card['cost']))
-        r.sadd("card_index", card['text'])
-
-
-cards = [
-    {"text": "Sword", "attack": 3, "cost": 2},
-    {"text": "Pistol", "attack": 5, "cost": 3},
-    {"text": "Shotgun", "attack": 10, "cost": 5},
-    {"text": "Knife", "attack": 1, "cost": 1},
-]
-
-initial_input(cards)
-
+initial_input(r)
 
 @socketio.on('join')
 def on_join(data):  # This is called in chatapp.js when the user submits a name in /rooms/<room>
@@ -77,7 +61,6 @@ def on_message(data):
     to_send = f"{datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-5))).strftime('%I:%M:%S %p')} - {username}: {message}"
     r.lpush(f"room_message_history:{room}", to_send)
 
-    # emit('debug', {'sid': request.sid, 'session': session.get('room')})
     emit('message', {'message': to_send}, room=room)
 
 
@@ -103,7 +86,7 @@ def connect():
 def delete_history(data):
     for key in r.keys():
         r.delete(key)
-    initial_input(cards)
+    initial_input(r)
 
 
 ################
@@ -112,7 +95,8 @@ def delete_history(data):
 CARD_START_ID = 0
 NUM_CARDS = 3
 WIN_SCORE = 10
-
+MAX_ENERGY = 10
+AUTOGEN_ENERGY = 3
 
 def get_room_data(room):
     return json.loads(r.get(f"roomData:{room}"))
@@ -129,6 +113,7 @@ def start_game(room):
     room_data = dict()
     userSIDs = [member for member in list(r.smembers(f"room_members:{room}"))]
     userNames = [r.get(sid) for sid in userSIDs]
+    userEnergies = [MAX_ENERGY for _ in userSIDs]
     scores = [0 for _ in userSIDs]
     playedThisTurn = [False for _ in userSIDs]
     turn = 0
@@ -155,9 +140,11 @@ def start_game(room):
         "userCards": userCards,
         "centerCards": centerCards,
         "userNames": userNames,  # ordered
+        "userEnergies": userEnergies,
         "userSIDs": userSIDs,
         "scores": scores,
         "turn": turn,
+        "maxEnergy": MAX_ENERGY,
         "playedThisTurn": playedThisTurn,
         "centerCardsPlayerIndex": centerCardsPlayerIndex
     }
@@ -176,38 +163,42 @@ def played_card(data):
 
     user_index = get_user_played_card(userCards, id)
 
-    if not playedThisTurn[user_index]:
+    if not room_data['playedThisTurn'][user_index]:
         players_cards = userCards[user_index]
         played_card_index = [i for i, card in enumerate(
             players_cards) if card['id'] == id][0]
 
-        # TODO: Come up with a better system
-        room_data['centerCards'].append(players_cards[played_card_index])
-        room_data['centerCardsPlayerIndex'].append(user_index)
-        room_data['userCards'][user_index].pop(played_card_index)
-        room_data['userCards'][user_index].append(gen_random_card(room))
-        room_data['playedThisTurn'][user_index] = True
+        if room_data['userEnergies'][user_index] >= int(players_cards[played_card_index]['cost']):
+            # TODO: Come up with a better system
 
-        set_room_data(room, room_data)
-        emit("update_game_state", room_data, room=room)
+            room_data['centerCards'].append(players_cards[played_card_index])
+            room_data['centerCardsPlayerIndex'].append(user_index)
+            room_data['userEnergies'][user_index] = min(AUTOGEN_ENERGY + int(room_data['userEnergies'][user_index]) - int(players_cards[played_card_index]['cost']), MAX_ENERGY)
+            room_data['userCards'][user_index].pop(played_card_index)
+            room_data['userCards'][user_index].append(gen_random_card(room, room_data['userEnergies'][user_index]))
+            room_data['playedThisTurn'][user_index] = True
+            
 
-    if all(playedThisTurn):
-        # handle game condition
-        winner_index = get_winner(
-            centerCards=room_data['centerCards'],
-            centerCardsPlayerIndex=room_data['centerCardsPlayerIndex']
-        )
-        room_data['scores'][winner_index] += 1
-        room_data['centerCards'] = []
-        room_data['centerCardsPlayerIndex'] = []
-        room_data['playedThisTurn'] = [False for _ in playedThisTurn]
+            set_room_data(room, room_data)
+            emit("update_game_state", room_data, room=room)
 
-        set_room_data(room, room_data)
-        emit("update_game_state", room_data, room=room)
+            if all(room_data['playedThisTurn']):
+                # handle game condition
+                winner_index = get_winner(
+                    centerCards=room_data['centerCards'],
+                    centerCardsPlayerIndex=room_data['centerCardsPlayerIndex']
+                )
+                room_data['scores'][winner_index] += 1
+                room_data['centerCards'] = []
+                room_data['centerCardsPlayerIndex'] = []
+                room_data['playedThisTurn'] = [False for _ in room_data['playedThisTurn']]
 
-        if room_data['scores'][winner_index] == WIN_SCORE:
-            emit("win_game", room_data['userNames'][winner_index], room=room)
-            r.set(f"game_started:{room}", "F")
+                set_room_data(room, room_data)
+                emit("update_game_state", room_data, room=room)
+
+                if room_data['scores'][winner_index] == WIN_SCORE:
+                    emit("win_game", room_data['userNames'][winner_index], room=room)
+                    r.set(f"game_started:{room}", "F")
 
 
 def get_user_played_card(userCards, id):
@@ -222,15 +213,16 @@ def get_winner(centerCards, centerCardsPlayerIndex):
     return centerCardsPlayerIndex[attacks.index(max(attacks))]
 
 
-def gen_random_card(room):
+def gen_random_card(room, userEnergy):
     cards = [r.hgetall(f"card:{key}")
              for key in list(r.smembers("card_index"))]
+    filtered_cards = [card for card in cards if (int(card['cost']) <= userEnergy)]
     card_id = r.get(f"room_card_id:{room}")
     r.set(f"room_card_id:{room}", int(card_id) + 1)
-    card = random.choice(cards)
+    card = random.choice(filtered_cards)
     card['id'] = card_id
     return card
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='0.0.0.0')
+    socketio.run(app, debug=True, host='0.0.0.0') # eventlet will be used, it
