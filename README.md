@@ -85,3 +85,25 @@ room_data = {
 ```
 
 The keys which have lists as values (besides `centerCards`) are ordered, meaning that each index corresponds to a single player.
+
+## Features TODO:
+- [ ] as
+
+
+## Hosting Information:
+- Minimum Viable Product
+  - ElasticCache - Redis
+  - S3 - React
+  - EC2 - Nginx + Gunicorn
+- Full Feature
+  - ElasticCache - Redis
+  - S3 - React
+
+## AWS Notes
+```console
+$ ssh -i "Nithin-MBP.pem" ec2-user@ec2-54-197-116-82.compute-1.amazonaws.com
+
+$ sudo yum -y update
+
+$ chmod 777 /home/ec2-user/data/
+```
