@@ -26,7 +26,17 @@ Then, go to `localhost:3000` to see the website
 - [ ] Make fully featured card game (Vue?)
 - [ ] Deploy fully featured card game
 
-
+## Features Branch:
+- [ ] Autoscroll chat
+- [ ] Played card that is not the user's is hidden
+- [ ] Played card has user's name
+- [ ] Card IDs are hidden
+- [ ] Card area for each user has their name
+- [ ] Last round played description
+- [ ] Ties are not given points
+- [ ] Users can exit the room
+- [ ] State not cleared on refresh
+- [ ] Variable game options (win, energy refill, etc.)
 
 ## Tutorials
 ### Websockets
