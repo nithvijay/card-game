@@ -240,4 +240,4 @@ def gen_random_card(room, userEnergy):
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=ENVIRONMENT=="DEV", host='0.0.0.0')  # eventlet will be used, it
+    socketio.run(app, debug=True, host='0.0.0.0')  # eventlet will be used, it
