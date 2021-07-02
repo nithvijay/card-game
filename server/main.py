@@ -3,7 +3,7 @@ import json
 import random
 import os
 
-from utils import initial_input
+from utils.db_init import initial_input
 import eventlet
 import redis
 from flask import Flask, request
