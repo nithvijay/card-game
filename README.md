@@ -21,9 +21,9 @@ Then, go to `localhost:3000` to see the website
 - [x] Produce chat application with React
 - [x] Make basic card game with React
 - [x] Containerize React app
-- [ ] Refine/refactor basic card game
-- [ ] Host basic card game with React frontend, Flask backend, and Redis database
-- [ ] Make fully featured card game
+- [x] Refine/refactor basic card game
+- [x] Host basic card game with React frontend, Flask backend, and Redis database
+- [ ] Make fully featured card game (Vue?)
 - [ ] Deploy fully featured card game
 
 
@@ -86,24 +86,29 @@ room_data = {
 
 The keys which have lists as values (besides `centerCards`) are ordered, meaning that each index corresponds to a single player.
 
-## Features TODO:
-- [ ] as
-
-
 ## Hosting Information:
 - Minimum Viable Product
   - ElasticCache - Redis
-  - S3 - React
-  - EC2 - Nginx + Gunicorn
+  - EC2 - Nginx -> React + Eventlet
 - Full Feature
   - ElasticCache - Redis
   - S3 - React
+  - ECS and Fargate - Backend
+  - CodePipeline
 
-## AWS Notes
+## AWS EC2 Setup
 ```console
 $ ssh -i "Nithin-MBP.pem" ec2-user@ec2-54-197-116-82.compute-1.amazonaws.com
 
-$ sudo yum -y update
+$ sudo amazon-linux-extras install -y nginx1
+$ sudo yum update
+$ sudo yum install -y emacs git
+$ sudo emacs /etc/nginx/nginx.conf
+$ sudo mkdir /data
+$ sudo chmod -R 775 /data 
 
-$ chmod 777 /home/ec2-user/data/
+$ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
+$ . ~/.nvm/nvm.sh
+$ nvm install node
+$ node -e "console.log('Running Node.js ' + process.version)"
 ```

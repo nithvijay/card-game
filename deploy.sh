@@ -45,4 +45,5 @@ cd ../server
 pkill -u ec2-user python3
 source card-game-env/bin/activate
 pip install -r requirements.txt
+python3 utils/db_reset.py
 nohup python3 main.py &
