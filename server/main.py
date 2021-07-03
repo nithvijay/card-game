@@ -13,12 +13,13 @@ eventlet.monkey_patch()
 
 app = Flask(__name__)
 
-## ENV Variables
+# ENV Variables
 ENVIRONMENT = os.getenv('ENVIRONMENT', 'DEV')
 AWS_ADDRESS = os.environ.get('AWS_ADDRESS')
 REDIS_ADDRESS = os.getenv('REDIS_ADDRESS', 'redis')
 
-cors_allowed_origins = ['http://localhost:3000', 'http://localhost:8080'] if ENVIRONMENT == 'DEV' else [AWS_ADDRESS]
+cors_allowed_origins = ['http://localhost:3000',
+                        'http://localhost:8080'] if ENVIRONMENT == 'DEV' else [AWS_ADDRESS]
 
 socketio = SocketIO(app, cors_allowed_origins=cors_allowed_origins,
                     async_handlers=True, async_mode='eventlet')  # , message_queue="redis://redis:6379")
@@ -131,6 +132,8 @@ def start_game(room):
     centerCards = []
     centerCardsPlayerIndex = []
     userCards = []
+    lastRoundDesc = "Select a card to begin"
+    totalNumberOfRounds = 1
 
     r.set(f"room_card_id:{room}", CARD_START_ID)
 
@@ -157,12 +160,15 @@ def start_game(room):
         "turn": turn,
         "maxEnergy": MAX_ENERGY,
         "playedThisTurn": playedThisTurn,
-        "centerCardsPlayerIndex": centerCardsPlayerIndex
+        "centerCardsPlayerIndex": centerCardsPlayerIndex,
+        "lastRoundDesc": lastRoundDesc,
+        "totalNumberOfRounds": totalNumberOfRounds
     }
     set_room_data(room, room_data)
     emit("update_game_state", room_data, room=room)
 
 
+# this function needs a lot of rework into smaller utility functions
 @socketio.on('played card')
 def played_card(data):
     id = data['id']
@@ -170,15 +176,15 @@ def played_card(data):
 
     room_data = get_room_data(room)
     userCards = room_data['userCards']
-    playedThisTurn = room_data['playedThisTurn']
 
     user_index = get_user_played_card(userCards, id)
 
-    if not room_data['playedThisTurn'][user_index]:
+    if not room_data['playedThisTurn'][user_index]:  # if the user hasn't gone that round
         players_cards = userCards[user_index]
         played_card_index = [i for i, card in enumerate(
             players_cards) if card['id'] == id][0]
 
+        # user plays card that they have the energy for
         if room_data['userEnergies'][user_index] >= int(players_cards[played_card_index]['cost']):
             # TODO: Come up with a better system
 
@@ -191,28 +197,33 @@ def played_card(data):
                 gen_random_card(room, room_data['userEnergies'][user_index]))
             room_data['playedThisTurn'][user_index] = True
 
-            set_room_data(room, room_data)
-            emit("update_game_state", room_data, room=room)
-
+            # if all users have played
             if all(room_data['playedThisTurn']):
                 # handle game condition
                 winner_index = get_winner(
                     centerCards=room_data['centerCards'],
                     centerCardsPlayerIndex=room_data['centerCardsPlayerIndex']
                 )
-                room_data['scores'][winner_index] += 1
+                if winner_index != -1:
+                    winner_name = room_data['userNames'][winner_index]
+                    room_data['scores'][winner_index] += 1
+                    room_data['lastRoundDesc'] = f"{winner_name} won last round!"
+                else:
+                    room_data['lastRoundDesc'] = "It was a tie"
+
+                room_data['totalNumberOfRounds'] += 1
                 room_data['centerCards'] = []
                 room_data['centerCardsPlayerIndex'] = []
                 room_data['playedThisTurn'] = [
                     False for _ in room_data['playedThisTurn']]
 
-                set_room_data(room, room_data)
-                emit("update_game_state", room_data, room=room)
-
                 if room_data['scores'][winner_index] == WIN_SCORE:
                     emit("win_game", room_data['userNames']
                          [winner_index], room=room)
                     r.set(f"game_started:{room}", "F")
+
+            set_room_data(room, room_data)
+            emit("update_game_state", room_data, room=room)
 
 
 def get_user_played_card(userCards, id):
@@ -223,8 +234,11 @@ def get_user_played_card(userCards, id):
 
 def get_winner(centerCards, centerCardsPlayerIndex):
     attacks = [int(card['attack']) for card in centerCards]
+    highest_attack = max(attacks)
+    # indicates tie
+    tie = sum(attack == highest_attack for attack in attacks) > 1
     # index of winner card
-    return centerCardsPlayerIndex[attacks.index(max(attacks))]
+    return -1 if tie else centerCardsPlayerIndex[attacks.index(highest_attack)]
 
 
 def gen_random_card(room, userEnergy):

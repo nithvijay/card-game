@@ -3,7 +3,6 @@ import { SocketContext } from "../context/socket";
 import PlayedCardsArea from "./PlayedCardsArea";
 import CardContainer from "./CardContainer";
 import Scoreboard from "./Scoreboard";
-import EnergyBar from "./EnergyBar";
 
 const PlayingArea = ({ room }) => {
   const socket = useContext(SocketContext);
@@ -20,13 +19,16 @@ const PlayingArea = ({ room }) => {
   /**
    * socket.io - gameState
    */
-  const handleGameState = useCallback((data) => {
-    setGameState(data);
-    setGameLoaded(true);
-    console.log("handleGameState");
-    console.log(data);
-    setUserIndex(data['userSIDs'].indexOf(socketID));
-  }, [socketID]);
+  const handleGameState = useCallback(
+    (data) => {
+      setGameState(data);
+      setGameLoaded(true);
+      console.log("handleGameState");
+      console.log(data);
+      setUserIndex(data["userSIDs"].indexOf(socketID));
+    },
+    [socketID]
+  );
 
   useEffect(() => {
     socket.on("update_game_state", handleGameState);
@@ -41,11 +43,17 @@ const PlayingArea = ({ room }) => {
           <Scoreboard
             userNames={gameState.userNames}
             scores={gameState.scores}
+            lastRoundDesc={gameState.lastRoundDesc}
+            totalNumberOfRounds={gameState.totalNumberOfRounds}
           />
 
-          <PlayedCardsArea playedCards={gameState.centerCards} />
-
-          <EnergyBar level={gameState.userEnergies[userIndex]} maxLevel={gameState.maxEnergy} />
+          <PlayedCardsArea
+            playedCards={gameState.centerCards}
+            sid={socketID}
+            sids={gameState.userSIDs}
+            names={gameState.userNames}
+            centerCardsPlayerIndex={gameState.centerCardsPlayerIndex}
+          />
 
           <CardContainer
             cards={gameState.userCards}
@@ -54,6 +62,8 @@ const PlayingArea = ({ room }) => {
             names={gameState.userNames}
             turn={gameState.turn}
             onCardClick={onCardClick}
+            level={gameState.userEnergies[userIndex]}
+            maxLevel={gameState.maxEnergy}
           />
         </>
       )}

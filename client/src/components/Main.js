@@ -7,19 +7,19 @@ import PlayingArea from "./PlayingArea";
 
 const Main = () => {
   const socket = useContext(SocketContext);
-  const [username, setUsername] = useState("");
-  const [room, setRoom] = useState("");
+  const [username, setUsername] = useState("1234");
+  const [room, setRoom] = useState("ASDF");
   const [enteredRoom, setEnteredRoom] = useState(false);
   const [startedGame, setStartedGame] = useState(false);
   const [gameWinner, setGameWinner] = useState("");
 
-  // const onErase = () => {
-  //   setEnteredRoom(false);
-  //   setStartedGame(false);
-  //   setRoom("");
-  //   setUsername("");
-  //   socket.emit("delete_history", {});
-  // };
+  const onErase = () => {
+    setEnteredRoom(false);
+    setStartedGame(false);
+    setRoom("");
+    setUsername("");
+    socket.emit("delete_history", {});
+  };
 
   const onStartGame = () => {
     socket.emit("start_game", room);
@@ -92,7 +92,7 @@ const Main = () => {
       )}
 
       {startedGame && <PlayingArea room={room} />}
-      {/* <button onClick={() => onErase()}>Erase</button> */}
+      <button onClick={() => onErase()}>Erase</button>
     </div>
   );
 };

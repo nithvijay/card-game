@@ -1,7 +1,12 @@
-const Scoreboard = ({ scores, userNames }) => {
+const Scoreboard = ({
+  scores,
+  userNames,
+  lastRoundDesc,
+  totalNumberOfRounds,
+}) => {
   return (
     <div className="p-3">
-      <div className="row">
+      <div className="row p-1">
         {scores.map((score, index) => (
           <div className="col" key={index}>
             <div className="card text-center">
@@ -10,6 +15,14 @@ const Scoreboard = ({ scores, userNames }) => {
             </div>
           </div>
         ))}
+      </div>
+      <div className="row p-1">
+        <div className="col">
+          <div className="card p-3">Round Number: {totalNumberOfRounds}</div>
+        </div>
+        <div className="col">
+          <div className="card p-3">{lastRoundDesc}</div>
+        </div>
       </div>
     </div>
   );

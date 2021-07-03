@@ -1,37 +1,61 @@
 import { useState, useContext, useCallback, useEffect } from "react";
 import { SocketContext } from "../context/socket";
 
-const Login = ({ username, room, setUsername, setRoom, setEnteredRoom}) => {
+const Login = ({ username, room, setUsername, setRoom, setEnteredRoom }) => {
   const socket = useContext(SocketContext);
-  const [validatedMessage, setValidatedMessage] = useState("");
-  const [validated, setValidated] = useState(true);
+  const [validatedUsernameMessage, setValidatedUsernameMessage] = useState("");
+  const [isUsernameValidated, setIsUsernameValidated] = useState(true);
+  const [validatedRoomMessage, setValidatedRoomMessage] = useState("");
+  const [isRoomValidated, setIsRoomValidated] = useState(true);
 
   const onChangeRoom = (e) => {
-    setRoom(e.target.value);
+    setRoom(e.target.value.toUpperCase());
+    if (!isRoomValidated) {
+      setValidatedRoomMessage("");
+      setIsRoomValidated(true);
+    }
   };
   const onChangeUserName = (e) => {
     setUsername(e.target.value);
+    if (!isUsernameValidated) {
+      setValidatedUsernameMessage("");
+      setIsUsernameValidated(true);
+    }
   };
 
   const onFormSubmit = (e) => {
     e.preventDefault();
-    if ((room.length === 4) & (username.length !== 0)) {
-      socket.emit("join", { username: username, room: room });
+    if (room.length !== 4) {
+      setValidatedRoomMessage("Room must be 4 characters");
+      setIsRoomValidated(false);
+    } else if (username.length === 0) {
+      setValidatedUsernameMessage("Please input a username");
+      setIsUsernameValidated(false);
     } else {
-      alert("Room Code must be 4 characters");
+      socket.emit("join", { username: username, room: room });
     }
   };
   /**
    * socket.io - entered_room
    */
-  const handleEnteredRoom = useCallback((data) => {
-    if (data !== "T") {
-      setValidatedMessage(data);
-      setValidated(false);
-    } else {
-      setEnteredRoom(true);
-    }
-  }, [setEnteredRoom]);
+  const handleEnteredRoom = useCallback(
+    (data) => {
+      if (data !== "T") {
+        if (data.startsWith("Game")) {
+          setValidatedRoomMessage(data);
+          setIsRoomValidated(false);
+        } else if (data.startsWith("Username")) {
+          setValidatedUsernameMessage(data);
+          setIsUsernameValidated(false);
+        }
+      } else {
+        setIsUsernameValidated(true);
+        setIsRoomValidated(true);
+        setEnteredRoom(true);
+      }
+    },
+    [setEnteredRoom]
+  );
 
   useEffect(() => {
     socket.on("entered_room", handleEnteredRoom);
@@ -50,13 +74,17 @@ const Login = ({ username, room, setUsername, setRoom, setEnteredRoom}) => {
             <div className="col-sm-8">
               <input
                 className={
-                  "form-control form-control-lg " + (!validated && "is-invalid")
+                  "form-control form-control-lg " +
+                  (!isUsernameValidated && "is-invalid")
                 }
                 value={username}
                 name="username"
                 onChange={(e) => onChangeUserName(e)}
               />
-              <span style={{ color: "red" }}>{validatedMessage}</span>
+              <span style={{ color: "red" }}>
+                &nbsp;
+                {validatedUsernameMessage}
+              </span>
             </div>
           </div>
           <div className="row m-3 align-items-center">
@@ -65,11 +93,18 @@ const Login = ({ username, room, setUsername, setRoom, setEnteredRoom}) => {
             </div>
             <div className="col-sm-8">
               <input
-                className="form-control form-control-lg"
+                className={
+                  "form-control form-control-lg " +
+                  (!isRoomValidated && "is-invalid")
+                }
                 value={room}
                 name="room"
                 onChange={(e) => onChangeRoom(e)}
               />
+              <div style={{ color: "red" }}>
+                &nbsp;
+                {validatedRoomMessage}
+              </div>
             </div>
           </div>
           <div className="row m-3">

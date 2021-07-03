@@ -27,16 +27,19 @@ Then, go to `localhost:3000` to see the website
 - [ ] Deploy fully featured card game
 
 ## Features Branch:
-- [ ] Autoscroll chat
-- [ ] Played card that is not the user's is hidden
-- [ ] Played card has user's name
+- [x] Autoscroll chat
+- [x] Played card that is not the user's is hidden
+- [x] Played card has user's name
 - [ ] Card IDs are hidden
-- [ ] Card area for each user has their name
-- [ ] Last round played description
-- [ ] Ties are not given points
-- [ ] Users can exit the room
+- [x] Card area for each user has their name
+- [x] Room error appears there
+- [x] Caps only room names
+- [x] Ties are not given points
+- [x] Total number of rounds included
 - [ ] State not cleared on refresh
+- [ ] Users can exit the room
 - [ ] Variable game options (win, energy refill, etc.)
+- [x] Last round played description
 
 ## Tutorials
 ### Websockets

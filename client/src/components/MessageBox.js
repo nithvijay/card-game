@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect, useCallback } from "react";
+import { useState, useContext, useEffect, useCallback, useRef } from "react";
 import { SocketContext } from "../context/socket";
 
 const MessageBox = ({ username, room, startedGame, onStartGame }) => {
@@ -7,6 +7,11 @@ const MessageBox = ({ username, room, startedGame, onStartGame }) => {
   const [messages, setMessages] = useState([`Hello And Welcome ${username}`]);
   const [message, setMessage] = useState("");
   const [roomMembers, setRoomMembers] = useState([]);
+  const divRef = useRef(null);
+
+  useEffect(() => {
+    divRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   /**
    * socket.io - message
@@ -65,10 +70,7 @@ const MessageBox = ({ username, room, startedGame, onStartGame }) => {
         username: username,
         message: message,
       });
-      console.log(message);
       setMessage("");
-    } else {
-      alert("Please Add A Message");
     }
   };
 
@@ -77,12 +79,10 @@ const MessageBox = ({ username, room, startedGame, onStartGame }) => {
       <div className="row p-3">
         <div className="col-sm-9">
           <div className="card p-3">
-            <div
-              className="overflow-scroll"
-              style={{ height: "36vh"}}
-            >
+            <div className="overflow-scroll" style={{ height: "36vh" }}>
               {messages.length > 0 &&
                 messages.map((msg, index) => <p key={index}>{msg}</p>)}
+              <div ref={divRef} />
             </div>
 
             <form className="input-group" onSubmit={(e) => onFormSubmit(e)}>
