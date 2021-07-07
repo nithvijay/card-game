@@ -3,12 +3,12 @@ import CardUnknown from "./CardUnknown";
 
 const PlayedCardsArea = ({
   playedCards,
-  sid,
-  sids,
+  mainID,
+  mainIDs,
   names,
   centerCardsPlayerIndex,
 }) => {
-  const playerIndex = sids.indexOf(sid);
+  const playerIndex = mainIDs.indexOf(mainID);
   const playedCardsIndex = centerCardsPlayerIndex.indexOf(playerIndex);
   const playerPlayedCard =
     playedCardsIndex >= 0 ? playedCards[playedCardsIndex] : false;

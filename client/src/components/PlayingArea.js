@@ -4,9 +4,8 @@ import PlayedCardsArea from "./PlayedCardsArea";
 import CardContainer from "./CardContainer";
 import Scoreboard from "./Scoreboard";
 
-const PlayingArea = ({ room }) => {
+const PlayingArea = ({ room, mainID }) => {
   const socket = useContext(SocketContext);
-  const socketID = socket.id;
 
   const [gameState, setGameState] = useState({});
   const [userIndex, setUserIndex] = useState(0);
@@ -25,9 +24,9 @@ const PlayingArea = ({ room }) => {
       setGameLoaded(true);
       console.log("handleGameState");
       console.log(data);
-      setUserIndex(data["userSIDs"].indexOf(socketID));
+      setUserIndex(data["userMainIDs"].indexOf(mainID));
     },
-    [socketID]
+    [mainID]
   );
 
   useEffect(() => {
@@ -49,16 +48,16 @@ const PlayingArea = ({ room }) => {
 
           <PlayedCardsArea
             playedCards={gameState.centerCards}
-            sid={socketID}
-            sids={gameState.userSIDs}
+            mainID={mainID}
+            mainIDs={gameState.userMainIDs}
             names={gameState.userNames}
             centerCardsPlayerIndex={gameState.centerCardsPlayerIndex}
           />
 
           <CardContainer
             cards={gameState.userCards}
-            sid={socketID}
-            sids={gameState.userSIDs}
+            mainID={mainID}
+            mainIDs={gameState.userMainIDs}
             names={gameState.userNames}
             turn={gameState.turn}
             onCardClick={onCardClick}

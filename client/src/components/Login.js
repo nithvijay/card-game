@@ -1,7 +1,14 @@
 import { useState, useContext, useCallback, useEffect } from "react";
 import { SocketContext } from "../context/socket";
 
-const Login = ({ username, room, setUsername, setRoom, setEnteredRoom }) => {
+const Login = ({
+  username,
+  room,
+  setUsername,
+  setRoom,
+  setEnteredRoom,
+  setStartedGame,
+}) => {
   const socket = useContext(SocketContext);
   const [validatedUsernameMessage, setValidatedUsernameMessage] = useState("");
   const [isUsernameValidated, setIsUsernameValidated] = useState(true);
@@ -9,7 +16,8 @@ const Login = ({ username, room, setUsername, setRoom, setEnteredRoom }) => {
   const [isRoomValidated, setIsRoomValidated] = useState(true);
 
   const onChangeRoom = (e) => {
-    setRoom(e.target.value.toUpperCase());
+    setRoom(e.target.value.toUpperCase().substring(0,4));
+    localStorage.setItem("room", e.target.value.toUpperCase().substring(0,4))
     if (!isRoomValidated) {
       setValidatedRoomMessage("");
       setIsRoomValidated(true);
@@ -17,6 +25,7 @@ const Login = ({ username, room, setUsername, setRoom, setEnteredRoom }) => {
   };
   const onChangeUserName = (e) => {
     setUsername(e.target.value);
+    localStorage.setItem("username", e.target.value)
     if (!isUsernameValidated) {
       setValidatedUsernameMessage("");
       setIsUsernameValidated(true);
@@ -32,6 +41,10 @@ const Login = ({ username, room, setUsername, setRoom, setEnteredRoom }) => {
       setValidatedUsernameMessage("Please input a username");
       setIsUsernameValidated(false);
     } else {
+      setIsRoomValidated(true);
+      setValidatedRoomMessage("");
+      setIsUsernameValidated(true);
+      setValidatedUsernameMessage("");
       socket.emit("join", { username: username, room: room });
     }
   };
@@ -47,6 +60,11 @@ const Login = ({ username, room, setUsername, setRoom, setEnteredRoom }) => {
         } else if (data.startsWith("Username")) {
           setValidatedUsernameMessage(data);
           setIsUsernameValidated(false);
+        } else if (data === "Started Already") {
+          setStartedGame(true);
+          setIsUsernameValidated(true);
+          setIsRoomValidated(true);
+          setEnteredRoom(true);
         }
       } else {
         setIsUsernameValidated(true);

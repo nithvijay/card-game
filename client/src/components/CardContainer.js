@@ -4,15 +4,15 @@ import EnergyBar from "./EnergyBar";
 
 const CardContainer = ({
   cards,
-  sid,
-  sids,
+  mainID,
+  mainIDs,
   names,
   turn,
   onCardClick,
   level,
   maxLevel,
 }) => {
-  const index = sids.indexOf(sid);
+  const index = mainIDs.indexOf(mainID);
   const userCards = cards[index];
   const otherCards = cards.filter((card, i) => i !== index);
   const filteredNames = names.filter((name, i) => i !== index);

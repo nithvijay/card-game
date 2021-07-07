@@ -9,3 +9,6 @@ def initial_input(r):
         r.hset(f"card:{card['text']}", mapping=card)
         # r.hmset(f"card:{card['text']}", ("text", card['text']), ('attack', card['attack']), ('cost', card['cost']))
         r.sadd("card_index", card['text'])
+
+    MAIN_ID_START = 1
+    r.set("main_id_generator", MAIN_ID_START)

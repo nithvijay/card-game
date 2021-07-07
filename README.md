@@ -36,9 +36,7 @@ Then, go to `localhost:3000` to see the website
 - [x] Caps only room names
 - [x] Ties are not given points
 - [x] Total number of rounds included
-- [ ] State not cleared on refresh
 - [ ] Users can exit the room
-- [ ] Variable game options (win, energy refill, etc.)
 - [x] Last round played description
 
 ## Tutorials

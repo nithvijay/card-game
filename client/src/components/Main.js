@@ -7,8 +7,9 @@ import PlayingArea from "./PlayingArea";
 
 const Main = () => {
   const socket = useContext(SocketContext);
-  const [username, setUsername] = useState("1234");
-  const [room, setRoom] = useState("ASDF");
+  const [username, setUsername] = useState(localStorage.getItem('username'));
+  const [mainID, setMainID] = useState("");
+  const [room, setRoom] = useState(localStorage.getItem('room'));
   const [enteredRoom, setEnteredRoom] = useState(false);
   const [startedGame, setStartedGame] = useState(false);
   const [gameWinner, setGameWinner] = useState("");
@@ -18,6 +19,7 @@ const Main = () => {
     setStartedGame(false);
     setRoom("");
     setUsername("");
+    localStorage.clear()
     socket.emit("delete_history", {});
   };
 
@@ -66,6 +68,19 @@ const Main = () => {
     return () => socket.off("debug", debug);
   }, [debug, socket]);
 
+  /**
+   * socket.io - getMainID
+   */
+  useEffect(() => {
+    // happens once when the component is created
+    const temp = localStorage.getItem("mainID");
+    socket.once("get_main_id", (data) => {
+      localStorage.setItem("mainID", data['mainID']);
+      setMainID(data['mainID']);
+    });
+    socket.emit("main_id", temp);
+  }, [socket]);
+
   return (
     <div className="container-sm" style={{ maxWidth: "100%" }}>
       {!enteredRoom && (
@@ -75,6 +90,7 @@ const Main = () => {
           room={room}
           setRoom={setRoom}
           setEnteredRoom={setEnteredRoom}
+          setStartedGame={setStartedGame}
         />
       )}
 
@@ -91,7 +107,7 @@ const Main = () => {
         <div className="card p-2 m-2">{gameWinner} won!</div>
       )}
 
-      {startedGame && <PlayingArea room={room} />}
+      {startedGame && <PlayingArea room={room} mainID={mainID} />}
       <button onClick={() => onErase()}>Erase</button>
     </div>
   );

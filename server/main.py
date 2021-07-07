@@ -4,6 +4,7 @@ import random
 import os
 
 from utils.db_init import initial_input
+from utils.db_utils import gen_main_id
 import eventlet
 import redis
 from flask import Flask, request
@@ -27,41 +28,88 @@ r = redis.Redis(host=REDIS_ADDRESS, port=6379, db=0, decode_responses=True)
 initial_input(r)
 
 
+@socketio.on("connect")
+def connect():
+    print(f"{request.sid} connected.\n\n\n\n")
+
+
+@socketio.on("main_id")
+def on_send_main_id(data):
+    # check main id if it is in the database, else generate new one
+    main_id = data
+    if main_id in r.smembers("main_ids"):  # user exists in the database
+        r.set(request.sid, main_id)
+    else:
+        main_id_generator = int(r.get("main_id_generator"))
+        main_id = gen_main_id(main_id_generator)
+        r.set("main_id_generator", main_id_generator + 1)
+        r.set(request.sid, main_id)
+        r.sadd("main_ids", main_id)
+    emit('get_main_id', {'mainID': main_id})
+
+
 @socketio.on('join')
 def on_join(data):  # This is called in chatapp.js when the user submits a name in /rooms/<room>
     user = data['username']
     room = data['room']
     sid = request.sid
+    main_id = r.get(sid)
+    is_user_in_room_data = False
 
-    if r.get(f"game_started:{room}") == "T":
+    # room exists and user was in that room
+    if r.get(f"roomData:{room}"):
+        room_data = get_room_data(room)
+        is_user_in_room_data = main_id in room_data['userMainIDs']
+
+    if (r.get(f"game_started:{room}") == "T") and not is_user_in_room_data:
         emit('entered_room', "Game has already started")
+        # if username exists in room
     elif user in set(r.get(member) for member in list(r.smembers(f"room_members:{room}"))):
         emit('entered_room', "Username taken in that room")
     else:
-        join_room(room)
-        emit('entered_room', "T")
+        join_room_function(room, main_id, user)
 
-        # index of keys
-        # set named set_of_rooms contains all rooms
-        r.sadd("set_of_rooms", room)
-        # so users can only be part of one room, potentially slow with large number of rooms, looping through all rooms to see
-        for key in list(r.smembers("set_of_rooms")):
-            if r.srem(f"room_members:{key}", sid):
-                leave_room(key)
-                emit('message', {
-                    'message': f"{user} has left Room {key}"}, room=key)
+def join_room_function(room, main_id, user):
+    join_room(room)
 
-        # set named room_members:ASDF contains sid of users in the room
-        r.sadd(f"room_members:{room}", sid)
-        r.set(name=sid, value=user)  # key-value pair for sid and user name
+    r.set(main_id, user)  # key-value pair for main_id and user name
 
-        emit('message_history', {'message_history': r.lrange(
-            f"room_message_history:{room}", 0, 1000)})
-        emit('message', {
-             'message': f"{user} has entered Room {room}"}, room=room)
-        members = [r.get(member)
-                   for member in list(r.smembers(f"room_members:{room}"))]
-        emit('update_room_members', {'room_occupants': members}, room=room)
+    if r.get(f"game_started:{room}") != "T":
+            emit('entered_room', "T")
+    else:
+        emit('entered_room', "Started Already")
+        # get index of user who was in the room previously
+        room_data = get_room_data(room)
+        playerIndex = room_data['userMainIDs'].index(main_id)
+        room_data['userNames'][playerIndex] = user
+        set_room_data(room, room_data)
+        emit("update_game_state", room_data, room=room)
+
+    # so users can only be part of one room, potentially slow with large number of rooms, looping through all rooms to see
+    for key in list(r.smembers("set_of_rooms")):
+        if r.srem(f"room_members:{key}", main_id):
+            leave_room(key)
+            emit('message', {
+                'message': f"{user} has left Room {key}"}, room=key)
+            members = [r.get(member) for member in list(
+                r.smembers(f"room_members:{key}"))]
+            emit('update_room_members', {'room_occupants': members}, room=key)
+
+    # index of keys
+    # set named set_of_rooms contains all rooms
+    r.sadd("set_of_rooms", room)
+
+    # set named room_members:ASDF contains main_id of users in the room
+    r.sadd(f"room_members:{room}", main_id)
+
+    emit('message_history', {'message_history': r.lrange(
+        f"room_message_history:{room}", 0, 1000)})
+    emit('message', {
+            'message': f"{user} has entered Room {room}"}, room=room)
+    members = [r.get(member)
+                for member in list(r.smembers(f"room_members:{room}"))]
+    emit('update_room_members', {'room_occupants': members}, room=room)
+
 
 
 @socketio.on("message")
@@ -78,19 +126,19 @@ def on_message(data):
 @socketio.on('disconnect')
 def on_disconnect():
     sid = request.sid
+    main_id = r.get(sid)
+    print("/n/n/n/n/n asf asdf asf")
+    print(main_id)
+    
     for key in list(r.smembers("set_of_rooms")):
-        if r.srem(f"room_members:{key}", sid):  # check which room the user left
+        # check which room the user left
+        if r.srem(f"room_members:{key}", main_id):
             emit('message', {
-                 'message': f"{r.get(sid)} has left Room {key}"}, room=key)
+                 'message': f"{r.get(main_id)} has left Room {key}"}, room=key)
             members = [r.get(member) for member in list(
                 r.smembers(f"room_members:{key}"))]
             emit('update_room_members', {'room_occupants': members}, room=key)
     r.delete(sid)
-
-
-@socketio.on("connect")
-def connect():
-    print(f"{request.sid} connected.\n\n\n\n")
 
 
 @socketio.on('delete_history')
@@ -123,11 +171,12 @@ def start_game(room):
     emit("game_started", "", room=room)
     r.set(f"game_started:{room}", "T")
     room_data = dict()
-    userSIDs = [member for member in list(r.smembers(f"room_members:{room}"))]
-    userNames = [r.get(sid) for sid in userSIDs]
-    userEnergies = [MAX_ENERGY for _ in userSIDs]
-    scores = [0 for _ in userSIDs]
-    playedThisTurn = [False for _ in userSIDs]
+    userMainIDs = [member for member in list(
+        r.smembers(f"room_members:{room}"))]
+    userNames = [r.get(mainID) for mainID in userMainIDs]
+    userEnergies = [MAX_ENERGY for _ in userMainIDs]
+    scores = [0 for _ in userMainIDs]
+    playedThisTurn = [False for _ in userMainIDs]
     turn = 0
     centerCards = []
     centerCardsPlayerIndex = []
@@ -140,7 +189,7 @@ def start_game(room):
     cards = [r.hgetall(f"card:{key}")
              for key in list(r.smembers("card_index"))]
 
-    for _ in userSIDs:
+    for _ in userMainIDs:
         rand_cards = random.choices(cards, k=NUM_CARDS)
         player_cards = []
         for card in rand_cards:
@@ -155,7 +204,7 @@ def start_game(room):
         "centerCards": centerCards,
         "userNames": userNames,  # ordered
         "userEnergies": userEnergies,
-        "userSIDs": userSIDs,
+        "userMainIDs": userMainIDs,
         "scores": scores,
         "turn": turn,
         "maxEnergy": MAX_ENERGY,
