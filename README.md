@@ -12,7 +12,7 @@ $ docker-compose down # to close the website fully and delete database
 
 Then, go to `localhost:3000` to see the website
 
-> The container environment still needs work. The anonymous volumes used do not get deleted, so `docker system purge --volumes` needs to be done every once in a while.
+> The container environment still needs work. The anonymous volumes used do not get deleted, so `docker volume prune` needs to be done every once in a while.
 
 ## Things to do:
 - [x] Create Container environment
@@ -26,18 +26,6 @@ Then, go to `localhost:3000` to see the website
 - [ ] Make fully featured card game (Vue?)
 - [ ] Deploy fully featured card game
 
-## Features Branch:
-- [x] Autoscroll chat
-- [x] Played card that is not the user's is hidden
-- [x] Played card has user's name
-- [ ] Card IDs are hidden
-- [x] Card area for each user has their name
-- [x] Room error appears there
-- [x] Caps only room names
-- [x] Ties are not given points
-- [x] Total number of rounds included
-- [ ] Users can exit the room
-- [x] Last round played description
 
 ## Tutorials
 ### Websockets
@@ -55,71 +43,12 @@ Then, go to `localhost:3000` to see the website
 - Python Redis API - https://github.com/andymccurdy/redis-py
 - Redis Docker Image - https://hub.docker.com/_/redis
 
-### React
-- React Docs - https://reactjs.org/docs/getting-started.html
-- React Crash Course - https://www.youtube.com/watch?v=w7ejDZ8SWv8
-- Using the socket-io client - https://dev.to/bravemaster619/how-to-use-socket-io-client-correctly-in-react-app-o65
 
-# Notes
-
-## **Redis Notes**
-```console
-$ docker exec -it redis bash
-$ redis-cli
-```
-
-Database Notes:
-
-Name | Description | Data Type | Redis Command
----|---|---|---
-`card_index` | Index for cards | Set | `SMEMBERS`
-`set_of_rooms` | Index for rooms | Set | `SMEMBERS`
-`room_data:<ASDF>` | All game data | Single Field | `GET`
-`room_members:<ASDF>` | SIDs of users in the room | Set | `SMEMBERS`
-`card:<Sword>` | Attributes for card | Many Fields | `HGET`/`HGETALL`
-`<nXM8LkLfjGYCs0dlAAAJ>` | Name of given sid | Single Field | `GET` 
-
-
-### What `room_data` contains
-
-```python
-room_data = {
-    userCards=[[<Card Object>], [...], ...] 
-    centerCards=[<Card Object>, ...] # unordered/based on centerCardsPlayerIndex
-    userNames=[],
-    userSIDs=[], 
-    scores={},
-    turn=..., # unused
-    playedThisTurn: [],
-    centerCardsPlayerIndex: []
-}
-```
-
-The keys which have lists as values (besides `centerCards`) are ordered, meaning that each index corresponds to a single player.
-
-## Hosting Information:
-- Minimum Viable Product
-  - ElasticCache - Redis
-  - EC2 - Nginx -> React + Eventlet
-- Full Feature
-  - ElasticCache - Redis
-  - S3 - React
-  - ECS and Fargate - Backend
-  - CodePipeline
-
-## AWS EC2 Setup
-```console
-$ ssh -i "Nithin-MBP.pem" ec2-user@ec2-54-197-116-82.compute-1.amazonaws.com
-
-$ sudo amazon-linux-extras install -y nginx1
-$ sudo yum update
-$ sudo yum install -y emacs git
-$ sudo emacs /etc/nginx/nginx.conf
-$ sudo mkdir /data
-$ sudo chmod -R 775 /data 
-
-$ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
-$ . ~/.nvm/nvm.sh
-$ nvm install node
-$ node -e "console.log('Running Node.js ' + process.version)"
-```
+## Game Notes
+- Stage 1 - discard
+  - All except Sheriff have option to Discard
+- Stage 2 - select cards
+  - All except Sheriff need to select cards
+- Stage 3 - inspection
+  - Sheriff chooses to inspect certain cards
+- Stage 4 - reveal and declare points

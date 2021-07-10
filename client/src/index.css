@@ -1,33 +1,6 @@
-/* @media (max-width: 1024px) {
-  .container {
-    max-width: 100%;
-    background-color: yellow;
-  }
-} */
+/* ./src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-p {
-  border: 1px solid gainsboro;
-  border-radius: 5px;
-}
-
-.scorecard-player-score {
-  font-size: large;
-}
-
-.energy-cell {
-    height: 30px;
-    width: 30px;
-    border: solid 1px rgb(80, 80, 80);
-    border-radius: 9px;
-}
-
-.card-cursor {
-  cursor: pointer;
-}
-
-.active {
-  background-color: rgb(81, 155, 155);
-}
-.inactive {
-  background-color: rgb(231, 237, 237);
-}
+@import url("https://fonts.googleapis.com/css2?family=Montserrat&display=swap");
