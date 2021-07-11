@@ -1,21 +1,29 @@
 <template>
   <div id="app" class="font-Montserrat">
     <div class="min-h-screen bg-gray-200">
-      <game-view v-if="screen === 'game'" />
-      <login-view v-if="screen === 'login'" />
-      <room-lobby-view v-if="screen === 'room-lobby'" />
-      <button
+      <game-view v-if="pageView === 'game'" />
+      <login-view v-if="pageView === 'login-view'" />
+      <room-lobby-view v-if="pageView === 'room-lobby'" />
+      <!-- <button
         class="bg-white p-1 rounded-md"
         type="button"
         @click.prevent="switchViews"
       >
         Click Here
+      </button> -->
+      <button
+        class="bg-white p-1 rounded-md"
+        type="button"
+        @click.prevent="clearStorage"
+      >
+        Click Storage
       </button>
     </div>
   </div>
 </template>
 
 <script>
+import { mapState } from "vuex";
 import GameView from "./views/GameView.vue";
 import LoginView from "./views/LoginView.vue";
 import RoomLobbyView from "./views/RoomLobbyView.vue";
@@ -32,16 +40,34 @@ export default {
     switchViews: function () {
       this.screenIndex = (this.screenIndex + 1) % this.screenOptions.length;
     },
+    clearStorage: function () {
+      localStorage.clear();
+    },
   },
   computed: {
     screen: function () {
       return this.screenOptions[this.screenIndex];
     },
+    ...mapState("General", ["pageView"]),
   },
   components: {
     GameView,
     LoginView,
     RoomLobbyView,
+  },
+  sockets: {
+    connect() {
+      console.log("socket connected");
+    },
+    debug(data) {
+      console.log("debug");
+      console.log(data);
+    },
+  },
+  created() {
+    console.log("Called created()");
+    const pid = localStorage.getItem("pid");
+    this.$socket.client.emit("pageLoaded", pid);
   },
 };
 </script>

@@ -2,7 +2,7 @@
   <div class="text-center">
     <button
       type="button"
-      v-if="isReady"
+      v-if="isUserReady"
       @click.prevent="clickedReady"
       class="
         text-lg
@@ -36,18 +36,32 @@
     >
       Not Ready <i class="fas fa-times text-red-500" />
     </button>
+    {{ pid }}
+    {{ getRoomLobbyMembers }}
   </div>
 </template>
 
 <script>
+import { mapState, mapGetters, mapActions } from "vuex";
+
 export default {
-  data: function () {
-    return { isReady: false };
-  },
   methods: {
     clickedReady() {
-      this.isReady = !this.isReady;
+      console.log(this.getScoreToWin);
+      console.log(this.setScoreToWin);
+      // console.log(!this.isUserReady);
+      // this.$socket.client.emit("changeReadyStatusRoomLobby", {
+      //   pid: this.pid,
+      //   room: this.room,
+      //   isReady: !this.isUserReady,
+      // });
     },
+    ...mapActions("RoomLobby", ["setScoreToWin"]),
+  },
+  computed: {
+    ...mapState("General", ["pid", "room"]),
+    ...mapState("RoomLobby", ["roomLobbyStatus"]),
+    ...mapGetters("RoomLobby", ["getScoreToWin"]),
   },
 };
 </script>

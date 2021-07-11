@@ -1,11 +1,15 @@
+import { getField, updateField } from "vuex-map-fields";
+
 const state = () => ({
-  username,
-  room,
-  pid,
-  pageView,
+  username: "",
+  room: "",
+  pid: "",
+  pageView: "login-view",
 });
 
-const getters = {};
+const getters = {
+  getField,
+};
 
 const actions = {
   setUsername: function ({ commit }, username) {
@@ -14,11 +18,14 @@ const actions = {
   setRoom: function ({ commit }, room) {
     commit("setRoom", room);
   },
-  setRoom: function ({ commit }, room) {
-    commit("setRoom", room);
+  socket_customEmit: function ({ commit }, data) {
+    commit("setRoom", data);
   },
-  setRoom: function ({ commit }, room) {
-    commit("setRoom", room);
+  socket_setPageView: function ({ commit }, data) {
+    commit("setPageView", data);
+  },
+  socket_setPid: function ({ commit }, data) {
+    commit("setPid", data);
   },
 };
 
@@ -30,11 +37,13 @@ const mutations = {
     state.room = room;
   },
   setPid: function (state, pid) {
+    localStorage.setItem("pid", pid);
     state.pid = pid;
   },
   setPageView: function (state, pageView) {
     state.pageView = pageView;
   },
+  updateField,
 };
 
 export default {

@@ -5,19 +5,19 @@
       <!-- scoreToWin Radio Group -->
       <custom-radio-button
         text="30"
-        namespace="LobbyConfig"
+        namespace="RoomLobby"
         :vuexRadioGroupState="scoreToWinRadioGroupStateName"
         :vuexRadioGroupMutator="scoreToWinRadioGroupMutatorName"
       />
       <custom-radio-button
         text="50"
-        namespace="LobbyConfig"
+        namespace="RoomLobby"
         :vuexRadioGroupState="scoreToWinRadioGroupStateName"
         :vuexRadioGroupMutator="scoreToWinRadioGroupMutatorName"
       />
       <custom-radio-button
         text="70"
-        namespace="LobbyConfig"
+        namespace="RoomLobby"
         :vuexRadioGroupState="scoreToWinRadioGroupStateName"
         :vuexRadioGroupMutator="scoreToWinRadioGroupMutatorName"
       />
@@ -28,33 +28,33 @@
     <div class="flex gap-1">
       <custom-radio-button
         text="3"
-        namespace="LobbyConfig"
+        namespace="RoomLobby"
         :vuexRadioGroupState="numCardsInHandRadioGroupStateName"
         :vuexRadioGroupMutator="numCardsInHandRadioGroupMutatorName"
       />
 
       <custom-radio-button
         text="4"
-        namespace="LobbyConfig"
+        namespace="RoomLobby"
         :vuexRadioGroupState="numCardsInHandRadioGroupStateName"
         :vuexRadioGroupMutator="numCardsInHandRadioGroupMutatorName"
       />
 
       <custom-radio-button
         text="5"
-        namespace="LobbyConfig"
+        namespace="RoomLobby"
         :vuexRadioGroupState="numCardsInHandRadioGroupStateName"
         :vuexRadioGroupMutator="numCardsInHandRadioGroupMutatorName"
       />
       <custom-radio-button
         text="6"
-        namespace="LobbyConfig"
+        namespace="RoomLobby"
         :vuexRadioGroupState="numCardsInHandRadioGroupStateName"
         :vuexRadioGroupMutator="numCardsInHandRadioGroupMutatorName"
       />
       <custom-radio-button
         text="7"
-        namespace="LobbyConfig"
+        namespace="RoomLobby"
         :vuexRadioGroupState="numCardsInHandRadioGroupStateName"
         :vuexRadioGroupMutator="numCardsInHandRadioGroupMutatorName"
       />
@@ -80,7 +80,7 @@ export default {
   components: {
     CustomRadioButton,
   },
-  computed: mapState("LobbyConfig", [
+  computed: mapState("RoomLobby", [
     "scoreToWinRadioGroup",
     "numCardsInHandRadioGroup",
   ]),
