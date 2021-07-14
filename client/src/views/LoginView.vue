@@ -15,11 +15,10 @@
           transition
           duration-300
           focus:bg-white
-          focus:border-blue-800
         "
         :class="{
-          ' border-gray-100': isUsernameValid,
-          'border-red-500': !isUsernameValid,
+          'border-gray-100 focus:border-blue-800': isUsernameValid,
+          'border-red-500 focus:border-red-500': !isUsernameValid,
         }"
         type="text"
         v-model="usernameModel"
@@ -83,9 +82,9 @@
           rounded
         "
         @click.prevent="submitLoginInfo"
-        type="button"
+        type="submit"
       >
-        Click Me
+        Submit
       </button>
     </form>
   </div>
@@ -110,7 +109,13 @@ export default {
         return this.$store.state["General"].username;
       },
       set(value) {
-        this.isUsernameValid = true;
+        if (value.length > 14) {
+          this.isUsernameValid = false;
+          this.usernameValidMessage =
+            "username must be fewer than 15 characters";
+        } else {
+          this.isUsernameValid = true;
+        }
         return this.$store.commit("General/setUsername", value);
       },
     },
@@ -119,27 +124,48 @@ export default {
         return this.$store.state["General"].room;
       },
       set(value) {
-        this.isRoomValid = true;
-        return this.$store.commit("General/setRoom", value);
+        if (value.length > 14) {
+          this.isRoomValid = false;
+          this.roomValidMessage = "room must be fewer than 15 characters";
+        } else {
+          this.isRoomValid = true;
+        }
+        return this.$store.commit("General/setRoom", value.toUpperCase());
       },
     },
   },
   sockets: {
     errorLoggingIn(data) {
-      console.log(data);
+      switch (data["type"]) {
+        case "username":
+          this.isUsernameValid = false;
+          this.usernameValidMessage = data["errorMessage"];
+          break;
+        case "room":
+          this.isRoomValid = false;
+          this.roomValidMessage = data["errorMessage"];
+          break;
+      }
     },
   },
   methods: {
     submitLoginInfo() {
-      if ((this.username.length > 0) & (this.room.length === 4)) {
+      localStorage.setItem("username", this.username);
+      localStorage.setItem("room", this.room);
+      if (
+        (15 > this.username.length) &
+        (this.username.length > 0) &
+        (15 > this.room.length) &
+        (this.room.length > 0)
+      ) {
         this.$socket.client.emit("submitLoginInfo", {
           username: this.username,
           room: this.room,
           pid: this.pid,
         });
-      } else if (this.room.length !== 4) {
+      } else if (this.room.length === 0) {
         this.isRoomValid = false;
-        this.roomValidMessage = "Room Code must be 4 characters";
+        this.roomValidMessage = "Room code cannot be empty";
       } else if (this.username.length === 0) {
         this.isUsernameValid = false;
         this.usernameValidMessage = "Username cannot be empty";

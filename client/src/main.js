@@ -9,6 +9,7 @@ import "./index.css";
 const socket = io("http://localhost:5000");
 
 Vue.config.productionTip = false;
+
 Vue.use(VueSocketIOExt, socket, { store });
 
 new Vue({

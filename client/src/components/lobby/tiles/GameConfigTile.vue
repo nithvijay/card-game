@@ -4,22 +4,13 @@
     <div class="flex gap-1">
       <!-- scoreToWin Radio Group -->
       <custom-radio-button
-        text="30"
+        v-for="value in scoreToWinValues"
+        :key="value"
+        :text="value"
         namespace="RoomLobby"
+        settingName="scoreToWin"
         :vuexRadioGroupState="scoreToWinRadioGroupStateName"
-        :vuexRadioGroupMutator="scoreToWinRadioGroupMutatorName"
-      />
-      <custom-radio-button
-        text="50"
-        namespace="RoomLobby"
-        :vuexRadioGroupState="scoreToWinRadioGroupStateName"
-        :vuexRadioGroupMutator="scoreToWinRadioGroupMutatorName"
-      />
-      <custom-radio-button
-        text="70"
-        namespace="RoomLobby"
-        :vuexRadioGroupState="scoreToWinRadioGroupStateName"
-        :vuexRadioGroupMutator="scoreToWinRadioGroupMutatorName"
+        :vuexRadioGroupAction="scoreToWinRadioGroupActionName"
       />
     </div>
 
@@ -27,40 +18,17 @@
     <div class="mt-5">Number of Cards in Hand</div>
     <div class="flex gap-1">
       <custom-radio-button
-        text="3"
+        v-for="value in numCardsInHandValues"
+        :key="value"
+        :text="value"
         namespace="RoomLobby"
+        settingName="numCardsInHand"
         :vuexRadioGroupState="numCardsInHandRadioGroupStateName"
-        :vuexRadioGroupMutator="numCardsInHandRadioGroupMutatorName"
-      />
-
-      <custom-radio-button
-        text="4"
-        namespace="RoomLobby"
-        :vuexRadioGroupState="numCardsInHandRadioGroupStateName"
-        :vuexRadioGroupMutator="numCardsInHandRadioGroupMutatorName"
-      />
-
-      <custom-radio-button
-        text="5"
-        namespace="RoomLobby"
-        :vuexRadioGroupState="numCardsInHandRadioGroupStateName"
-        :vuexRadioGroupMutator="numCardsInHandRadioGroupMutatorName"
-      />
-      <custom-radio-button
-        text="6"
-        namespace="RoomLobby"
-        :vuexRadioGroupState="numCardsInHandRadioGroupStateName"
-        :vuexRadioGroupMutator="numCardsInHandRadioGroupMutatorName"
-      />
-      <custom-radio-button
-        text="7"
-        namespace="RoomLobby"
-        :vuexRadioGroupState="numCardsInHandRadioGroupStateName"
-        :vuexRadioGroupMutator="numCardsInHandRadioGroupMutatorName"
+        :vuexRadioGroupAction="numCardsInHandRadioGroupActionName"
       />
     </div>
-    {{ scoreToWinRadioGroup }}
-    {{ numCardsInHandRadioGroup }}
+    {{ scoreToWin }}
+    {{ numCardsInHand }}
   </div>
 </template>
 
@@ -71,19 +39,18 @@ import CustomRadioButton from "../components/CustomRadioButton.vue";
 export default {
   data: function () {
     return {
-      scoreToWinRadioGroupStateName: "scoreToWinRadioGroup",
-      scoreToWinRadioGroupMutatorName: "setScoreToWinRadioGroup",
-      numCardsInHandRadioGroupStateName: "numCardsInHandRadioGroup",
-      numCardsInHandRadioGroupMutatorName: "setNumCardsInHandRadioGroup",
+      scoreToWinValues: ["30", "50", "70"],
+      numCardsInHandValues: ["3", "5", "7", "9", "11"],
+      scoreToWinRadioGroupStateName: "scoreToWin",
+      scoreToWinRadioGroupActionName: "setScoreToWin",
+      numCardsInHandRadioGroupStateName: "numCardsInHand",
+      numCardsInHandRadioGroupActionName: "setNumCardsInHand",
     };
   },
   components: {
     CustomRadioButton,
   },
-  computed: mapState("RoomLobby", [
-    "scoreToWinRadioGroup",
-    "numCardsInHandRadioGroup",
-  ]),
+  computed: mapState("RoomLobby", ["scoreToWin", "numCardsInHand"]),
 };
 </script>
 

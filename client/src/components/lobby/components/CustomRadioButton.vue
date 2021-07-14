@@ -6,13 +6,13 @@
         class="appearance-none hidden"
         name="radio"
         :value="text"
-        v-model="scoreToWinRadioGroupModel"
+        v-model="RadioGroupModel"
       />
       <div
         class="cursor-pointer py-1 shadow-md rounded-xl text-center"
         :class="{
-          'bg-blue-800 text-gray-100': scoreToWinRadioGroupModel === text, // checked
-          'bg-blue-50 hover:bg-blue-100': scoreToWinRadioGroupModel !== text,
+          'bg-blue-800 text-gray-100': RadioGroupModel === text, // checked
+          'bg-blue-50 hover:bg-blue-100': RadioGroupModel !== text,
         }"
       >
         {{ text }}
@@ -22,26 +22,37 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 export default {
   props: {
     text: String,
     namespace: String,
+    settingName: String,
     vuexRadioGroupState: String,
-    vuexRadioGroupMutator: String,
+    vuexRadioGroupAction: String,
   },
   computed: {
-    scoreToWinRadioGroupModel: {
+    RadioGroupModel: {
       get() {
         // this syntax is needed to reuse this component in other areas
         return this.$store.state[this.namespace][this.vuexRadioGroupState];
       },
       set(value) {
-        this.$store.commit(
-          `${[this.namespace]}/${this.vuexRadioGroupMutator}`,
-          value
-        );
+        console.log("how");
+        this.$socket.client.emit("changeRoomConfig", {
+          room: this.room,
+          setting: this.settingName,
+          value: value,
+        });
+
+        // this.$store.dispatch(
+        //   `${[this.namespace]}/${this.vuexRadioGroupAction}`,
+        //   value
+        // );
       },
     },
+    ...mapState("General", ["room"]),
   },
 };
 </script>

@@ -1,17 +1,10 @@
 <template>
   <div
-    class="
-      flex
-      bg-gradient-to-tr
-      from-green-700
-      to-green-800
-      rounded-lg
-      gap-1
-      px-2
-    "
+    class="flex rounded-lg gap-1 px-2"
+    :class="{ 'bg-green-700': state, 'bg-red-700': !state }"
   >
     <div class="font-extrabold text-gray-100">{{ name }}</div>
-    <div v-if="isSherriff" class="text-gray-200">
+    <div v-if="isInspector" class="text-gray-200">
       <i class="fas fa-gavel" />
     </div>
   </div>
@@ -20,8 +13,9 @@
 <script>
 export default {
   props: {
-    isSherriff: Boolean,
+    isInspector: Boolean,
     name: String,
+    state: Boolean,
   },
 };
 </script>

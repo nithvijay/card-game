@@ -1,9 +1,9 @@
 <template>
   <div id="app" class="font-Montserrat">
     <div class="min-h-screen bg-gray-200">
-      <game-view v-if="pageView === 'game'" />
+      <game-view v-if="pageView === 'game-view'" />
       <login-view v-if="pageView === 'login-view'" />
-      <room-lobby-view v-if="pageView === 'room-lobby'" />
+      <room-lobby-view v-if="pageView === 'room-lobby-view'" />
       <!-- <button
         class="bg-white p-1 rounded-md"
         type="button"
@@ -16,7 +16,7 @@
         type="button"
         @click.prevent="clearStorage"
       >
-        Click Storage
+        Clear Storage
       </button>
     </div>
   </div>
@@ -42,6 +42,7 @@ export default {
     },
     clearStorage: function () {
       localStorage.clear();
+      this.$socket.client.emit("delete");
     },
   },
   computed: {
@@ -60,12 +61,10 @@ export default {
       console.log("socket connected");
     },
     debug(data) {
-      console.log("debug");
       console.log(data);
     },
   },
   created() {
-    console.log("Called created()");
     const pid = localStorage.getItem("pid");
     this.$socket.client.emit("pageLoaded", pid);
   },

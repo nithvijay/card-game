@@ -36,32 +36,35 @@
     >
       Not Ready <i class="fas fa-times text-red-500" />
     </button>
-    {{ pid }}
-    {{ getRoomLobbyMembers }}
   </div>
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from "vuex";
+import { mapState, mapGetters } from "vuex";
 
 export default {
   methods: {
     clickedReady() {
-      console.log(this.getScoreToWin);
-      console.log(this.setScoreToWin);
-      // console.log(!this.isUserReady);
-      // this.$socket.client.emit("changeReadyStatusRoomLobby", {
-      //   pid: this.pid,
-      //   room: this.room,
-      //   isReady: !this.isUserReady,
-      // });
+      this.$socket.client.emit("changeReadyStatusRoomLobby", {
+        pid: this.pid,
+        room: this.room,
+        isReady: !this.isUserReady,
+      });
     },
-    ...mapActions("RoomLobby", ["setScoreToWin"]),
   },
   computed: {
     ...mapState("General", ["pid", "room"]),
     ...mapState("RoomLobby", ["roomLobbyStatus"]),
-    ...mapGetters("RoomLobby", ["getScoreToWin"]),
+    ...mapGetters("RoomLobby", ["someGetter"]),
+    isUserReady() {
+      if (this.someGetter) {
+        // this should not be necessary
+        return this.someGetter.filter((member) => member.pid === this.pid)[0]
+          .isReady;
+      } else {
+        return false;
+      }
+    },
   },
 };
 </script>

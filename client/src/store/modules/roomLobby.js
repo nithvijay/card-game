@@ -1,36 +1,41 @@
 import { getField, updateField } from "vuex-map-fields";
 
 const state = () => ({
-  scoreToWin: 50,
-  scoreToWinRadioGroup: "50",
-  numCardsInHandRadioGroup: "5",
+  scoreToWin: "",
+  numCardsInHand: "",
   roomLobbyStatus: {},
 });
 
 const getters = {
-  // getRoomLobbyMembers: (state) => (pid) => {
-  //   return state.roomLobbyStatus.members.filter(
-  //     (member) => member.pid !== pid
-  //   )[0].isReady;
-  // },
-  getScoreToWin: (state) => {
-    state.scoreToWin;
+  someGetter(state) {
+    return state.roomLobbyStatus.members;
   },
   getField,
 };
 
 const actions = {
   setScoreToWin: function ({ commit }, scoreToWin) {
+    this.$socket;
     commit("setScoreToWin", scoreToWin);
   },
-  setScoreToWinRadioGroup: function ({ commit }, scoreToWinRadioGroup) {
-    commit("setScoreToWinRadioGroup", scoreToWinRadioGroup);
-  },
-  setNumCardsInHandRadioGroup: function ({ commit }, numCardsInHandRadioGroup) {
-    commit("setNumCardsInHandRadioGroup", numCardsInHandRadioGroup);
+  setNumCardsInHand: function ({ commit }, numCardsInHand) {
+    commit("setNumCardsInHand", numCardsInHand);
   },
   socket_updateRoomLobbyStatus: function ({ commit }, roomLobbyStatus) {
     commit("updateRoomLobbyStatus", roomLobbyStatus);
+    commit("setScoreToWin", roomLobbyStatus["config"]["scoreToWin"]);
+    commit("setNumCardsInHand", roomLobbyStatus["config"]["numCardsInHand"]);
+  },
+  socket_updateRoomConfig: function ({ commit }, roomConfig) {
+    // potentially remove because redundant code, but improves efficiency a little bit?
+    switch (roomConfig["setting"]) {
+      case "scoreToWin":
+        commit("setScoreToWin", roomConfig["value"]);
+        break;
+      case "numCardsInHand":
+        commit("setNumCardsInHand", roomConfig["value"]);
+        break;
+    }
   },
 };
 
@@ -38,11 +43,8 @@ const mutations = {
   setScoreToWin: function (state, scoreToWin) {
     state.scoreToWin = scoreToWin;
   },
-  setScoreToWinRadioGroup: function (state, scoreToWinRadioGroup) {
-    state.scoreToWinRadioGroup = scoreToWinRadioGroup;
-  },
-  setNumCardsInHandRadioGroup: function (state, numCardsInHandRadioGroup) {
-    state.numCardsInHandRadioGroup = numCardsInHandRadioGroup;
+  setNumCardsInHand: function (state, numCardsInHand) {
+    state.numCardsInHand = numCardsInHand;
   },
   updateRoomLobbyStatus: function (state, roomLobbyStatus) {
     state.roomLobbyStatus = roomLobbyStatus;

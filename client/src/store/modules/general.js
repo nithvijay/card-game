@@ -1,13 +1,16 @@
 import { getField, updateField } from "vuex-map-fields";
 
 const state = () => ({
-  username: "",
-  room: "",
+  username: localStorage.getItem("username"),
+  room: localStorage.getItem("room"),
   pid: "",
   pageView: "login-view",
 });
 
 const getters = {
+  sampleGetter(state) {
+    return state.username;
+  },
   getField,
 };
 

@@ -2,12 +2,13 @@
   <div class="container max-w-sm mx-auto flex flex-col gap-2">
     <div class="h-4 bg-blue-400"></div>
     <turn-tile />
-    <button @click.prevent="changeStage">
+    <!-- <button @click.prevent="changeStage">
       Change Stage. Current Stage: {{ stage }}
-    </button>
+    </button> -->
     <transition name="component-fade" mode="out-in">
       <component :is="view" />
     </transition>
+    {{ generalGameData }}
   </div>
 </template>
 
@@ -18,12 +19,14 @@ import Stage2Tile from "../components/game/tiles/Stage2Tile.vue";
 import Stage3Tile from "../components/game/tiles/Stage3Tile.vue";
 import Stage4Tile from "../components/game/tiles/Stage4Tile.vue";
 
+import { mapState } from "vuex";
+
 export default {
   name: "GameView",
   data: function () {
     return {
-      stage: 1,
-      view: "stage-1-tile",
+      // stage: 1,
+      // view: "stage-1-tile",
     };
   },
   components: {
@@ -35,8 +38,18 @@ export default {
   },
   methods: {
     changeStage() {
-      this.stage = (this.stage % 4) + 1;
-      this.view = `stage-${this.stage}-tile`;
+      // this.stage = (this.stage % 4) + 1;
+      // this.view = `stage-${this.stage}-tile`;
+    },
+  },
+  computed: {
+    ...mapState("GeneralGame", ["generalGameData"]),
+    view() {
+      if (this.generalGameData.stage) {
+        return `stage-${this.generalGameData.stage}-tile`;
+      } else {
+        return "stage-1-tile";
+      }
     },
   },
 };
