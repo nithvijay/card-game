@@ -63,11 +63,10 @@ def on_page_loaded(pid):
     if db.sismember('set_of_pids', pid):  # if pid exists in database
         emit('setPid', pid)
         db.set(request.sid, pid)
-        # TODO: other logic if returning user, e.g. setting other state
     else:  # need to generate new pid
-        new_pid = gen_random_pid(db)
-        emit('setPid', new_pid)
-        db.set(request.sid, new_pid)
+        pid = gen_random_pid(db)
+        emit('setPid', pid)
+        db.set(request.sid, pid)
 
     emit('debug', {"sid": request.sid, "pid": pid})
 
@@ -110,41 +109,39 @@ def on_submit_login_info(data):
         add_user_to_room(db, pid, username, room)
     else:  # room exists
         room_lobby_status = db.get_json(f"room_lobby_status:{room}")
-        emit('debug', {"status": 'room exists'})
-        if room_lobby_status['started']:  # TODO room has started game
+        if room_lobby_status['started']:
             general_game_data = db.get_json(f'general_game_data:{room}')
 
             doesPidExist, user_index = check_if_pid_exists_in_room(
                 general_game_data, pid)
             if doesPidExist:  # if pid in the room, accept and change username
-                if check_if_username_taken(room_lobby_status, username):
-                    emit('debug', {"status": 'game started, username taken'})
+                if general_game_data['usernames'][user_index] == username:  # same username
+                    user_rejoin_room(db, pid, username, room,
+                                     user_index=user_index)
+                # different username and taken
+                elif check_if_username_taken(room_lobby_status, username):
                     emit('errorLoggingIn', {
                         'type': 'username',
                         'errorMessage': 'Username already taken in that room'
                     })
-                else:
-                    emit('debug', {"status": 'rejoined room'})
+                else:  # different username
                     user_rejoin_room(db, pid, username, room,
                                      user_index=user_index)
             else:  # else return error message
-                emit('debug', {"status": 'game started'})
                 emit('errorLoggingIn', {
                     'type': 'room',
                     'errorMessage': 'Game already started in that room'
                 })
         elif check_if_username_taken(room_lobby_status, username):
-            emit('debug', {"status": 'username taken'})
             emit('errorLoggingIn', {
                 'type': 'username',
                 'errorMessage': 'Username already taken in that room'
             })
         else:  # room exists and user can enter room
-            emit('debug', {"status": 'can enter'})
             add_user_to_room(db, pid, username, room)
 
 
-def add_user_to_room(db, pid, username, room, view='room-lobby-view'):
+def add_user_to_room(db, pid, username, room, set_view=True):
     room_lobby_status = db.get_json(f"room_lobby_status:{room}")
     db.set(pid, username)
     # db.sadd(f"active_room_members:{room}", pid)
@@ -159,11 +156,12 @@ def add_user_to_room(db, pid, username, room, view='room-lobby-view'):
     db.set(f"last_active_room:{pid}", room)
 
     emit("updateRoomLobbyStatus", room_lobby_status, room=room)
-    emit("setPageView", view)
+    if set_view:
+        emit("setPageView", 'room-lobby-view')
 
 
 def user_rejoin_room(db, pid, username, room, user_index):
-    add_user_to_room(db, pid, username, room, view='game-view')
+    add_user_to_room(db, pid, username, room, set_view=False)
 
     general_game_data = db.get_json(f'general_game_data:{room}')
     general_game_data['usernames'][user_index] = username  # update username
@@ -177,6 +175,7 @@ def user_rejoin_room(db, pid, username, room, user_index):
         stage_data = db.get_json(f'stage_{stage_num}_data:{room}')
         # TODO: only emit to user?
         emit(f'updateStage{stage_num}Data', stage_data)
+    emit("setPageView", 'game-view')
 
 
 def check_if_username_taken(room_lobby_status, username):
@@ -243,7 +242,6 @@ def start_new_game(db, room, room_lobby_status):
     }
     db.set(f'card_id_start:{room}', "1")
     db.set_json(f'general_game_data:{room}', general_game_data)
-    emit("setPageView", "game-view", room=room)
 
 
 def start_stage_1(db, room):
@@ -265,14 +263,11 @@ def start_stage_1(db, room):
 
     db.set_json(f'stage_1_data:{room}', stage_1_data)
     emit('updateStage1Data', stage_1_data, room=room)
+    emit("setPageView", "game-view", room=room)
 
 
 def gen_cards(CARDS, max_num, num_in_hand, db, room):
     ret_cards = []
-    emit('debug', {
-        'max_num': max_num,
-        'num_in_hand': num_in_hand
-    })
     for _ in range(int(max_num) - int(num_in_hand)):
         card = random.choice(CARDS).copy()
         card_id_start = db.get(f'card_id_start:{room}')
@@ -288,11 +283,6 @@ def on_change_score_to_win(data):
     setting = data['setting']
     value = data['value']
     room_lobby_status = db.get_json(f"room_lobby_status:{room}")
-    emit('debug', {
-        "room": room,
-        "setting": setting,
-        "value": value
-    })
 
     room_lobby_status['config'][setting] = value
     db.set_json(f"room_lobby_status:{room}", room_lobby_status)
@@ -310,11 +300,6 @@ def on_stage_1_user_ready(data):
     room = data['room']
     cards_selected_ids = data['cardsSelectedIds']
 
-    emit('debug', {
-        "pid": pid,
-        "room": room,
-        "cards_selected_ids": cards_selected_ids
-    })
     # TODO: get this from client for one less db call?
     general_game_data = db.get_json(f'general_game_data:{room}')
     user_index = general_game_data['pids'].index(pid)
@@ -326,10 +311,6 @@ def on_stage_1_user_ready(data):
     fulfill_discard(db, cards_selected_ids, user_index, room)
 
     if all(stage_1_data['isReady']):
-        # go to next stage
-        emit('debug', {
-            "status": "start_stage_2"
-        })
         start_stage_2(db, room)
 
 
@@ -357,16 +338,31 @@ def start_stage_2(db, room):
 
     is_ready = [False for _ in general_game_data['pids']]
     num_cards_for_each_user = [0 for _ in general_game_data['pids']]
+    cards_chosen = [[] for _ in general_game_data['pids']]
 
-    inspectorIndex = int(general_game_data['inspectorIndex'])
-    is_ready[inspectorIndex] = True
+    inspector_index = int(general_game_data['inspectorIndex'])
+    is_ready[inspector_index] = True
     stage_2_data = {
         'isReady': is_ready,
-        'numCardsForEachUser': num_cards_for_each_user
+        'numCardsForEachUser': num_cards_for_each_user,
+        'cardsChosen': cards_chosen
     }
     db.set_json(f'stage_2_data:{room}', stage_2_data)
     emit('updateStage2Data', stage_2_data, room=room)
     emit('updateGeneralGameData', general_game_data, room=room)
+    emit('updateUserIndex', room=room)
+
+
+@socketio.on("stage2SelectCard")
+def on_stage_2_user_ready(data):
+    user_index = data['userIndex']
+    room = data['room']
+    num_cards = data['numCards']
+
+    stage_2_data = db.get_json(f'stage_2_data:{room}')
+    stage_2_data['numCardsForEachUser'][user_index] = num_cards
+    db.set_json(f'stage_2_data:{room}', stage_2_data)
+    emit('updateStage2Data', stage_2_data, room=room)
 
 
 @socketio.on("stage2UserReady")
@@ -380,6 +376,67 @@ def on_stage_2_user_ready(data):
         "room": room,
         "cards_selected_ids": cards_selected_ids
     })
+
+    general_game_data = db.get_json(f'general_game_data:{room}')
+    user_index = general_game_data['pids'].index(pid)
+
+    stage_2_data = db.get_json(f'stage_2_data:{room}')
+
+    stage_2_data['cardsChosen'][user_index] = cards_selected_ids
+    stage_2_data['isReady'][user_index] = True
+
+    db.set_json(f'stage_2_data:{room}', stage_2_data)
+    emit('updateStage2Data', stage_2_data, room=room)
+
+    if all(stage_2_data['isReady']):
+        start_stage_3(db, room)
+
+#####
+# Stage 3
+#####
+
+
+def start_stage_3(db, room):
+    general_game_data = db.get_json(f'general_game_data:{room}')
+    general_game_data['stage'] = 3
+
+    stage_2_data = db.get_json(f'stage_2_data:{room}')
+    cards_chosen = stage_2_data['cardsChosen']
+
+    cards_in_bag = move_cards(cards_chosen, general_game_data)
+    # general_game_data['cards'] = users_cards
+    db.set_json(f'general_game_data:{room}', general_game_data)
+
+    is_checked = [False for _ in general_game_data['pids']]
+    inspector_index = int(general_game_data['inspectorIndex'])
+    is_checked[inspector_index] = True
+
+    stage_3_data = {
+        'isChecked': is_checked,
+        'cardsInBag': cards_in_bag
+    }
+    db.set_json(f'stage_3_data:{room}', stage_3_data)
+    emit('updateStage3Data', stage_3_data, room=room)
+    emit('updateGeneralGameData', general_game_data, room=room)
+    emit('debug', {
+        "stage_3_data": stage_3_data,
+        "general_game_data": general_game_data,
+    })
+
+
+def move_cards(cards_chosen, general_game_data):
+    cards_in_bag = []
+    for user_index, users_cards in enumerate(general_game_data['cards']):
+        cards_in_bag_user = []
+        indexer = 0
+        for _ in range(len(users_cards)):
+            if users_cards[indexer]['id'] in set(cards_chosen[user_index]):
+                cards_in_bag_user.append(users_cards[indexer])
+                users_cards.pop(indexer)
+            else:
+                indexer += 1
+        cards_in_bag.append(cards_in_bag_user)
+    return cards_in_bag
 
 
 if __name__ == '__main__':

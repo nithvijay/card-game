@@ -15,7 +15,6 @@ const getters = {
 
 const actions = {
   setScoreToWin: function ({ commit }, scoreToWin) {
-    this.$socket;
     commit("setScoreToWin", scoreToWin);
   },
   setNumCardsInHand: function ({ commit }, numCardsInHand) {

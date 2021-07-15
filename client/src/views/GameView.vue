@@ -8,7 +8,6 @@
     <transition name="component-fade" mode="out-in">
       <component :is="view" />
     </transition>
-    {{ generalGameData }}
   </div>
 </template>
 

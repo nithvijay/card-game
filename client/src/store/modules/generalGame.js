@@ -21,7 +21,7 @@ const actions = {
   socket_updateUserIndex: function ({ dispatch, commit, state, rootState }) {
     const pid = rootState["General"]["pid"];
     dispatch(
-      "GameStage1/initializeCardsSelected",
+      `GameStage${state.generalGameData.stage}/initializeCardsSelected`,
       state.generalGameData.cards[state.userIndex],
       { root: true }
     );

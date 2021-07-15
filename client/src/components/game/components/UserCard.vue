@@ -21,13 +21,9 @@
     @click="clickMethod(card.id)"
   >
     <i class="fas text-2xl m-3" :class="iconClass"></i>
-    <div class="text-sm">
-      {{ card.name }}
-    </div>
+    <div class="text-sm">{{ card.name }}</div>
 
-    <div class="font-extrabold">
-      {{ card.value }}
-    </div>
+    <div class="font-extrabold">{{ card.value }} - {{ card.id }}</div>
   </div>
 </template>
 
