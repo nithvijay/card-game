@@ -1,11 +1,30 @@
 <template>
   <div class="flex flex-col gap-2 items-center">
-    <user-inspect-panel :name="name1" :numCards="numCards1" :cards="cards" />
-    <user-inspect-panel :name="name2" :numCards="numCards2" :cards="cards" />
-    <user-inspect-panel :name="name3" :numCards="numCards3" :cards="cards" />
-    <user-inspect-panel :name="name4" :numCards="numCards4" :cards="cards" />
+    {{ stage3Data }}
+    <template v-if="generalGameData.inspectorIndex === userIndex">
+      <component
+        v-for="(user, index) in nonInspectorCards"
+        :key="index"
+        :name="user.username"
+        :pid="user.pid"
+        :numCards="user.numCards"
+        :cards="user.cards"
+        :is="mapDecisionToComponent(user.inspectorDecision)"
+        :inspectorDecision="user.inspectorDecision"
+      />
+    </template>
+    <template v-else>
+      <user-inspect-panel-other
+        v-for="(user, index) in nonInspectorCards"
+        :key="index"
+        :name="user.username"
+        :numCards="user.numCards"
+        :cards="user.cards"
+        :inspectorDecision="user.inspectorDecision"
+      />
+    </template>
 
-    <div class="text-center">
+    <div v-if="isRoundDone" class="text-center">
       <button
         type="button"
         class="
@@ -19,6 +38,7 @@
           py-2
           px-20
         "
+        @click="markReady"
       >
         Submit
       </button>
@@ -27,45 +47,55 @@
 </template>
 
 <script>
-import UserInspectPanel from "../components/UserInspectPanel.vue";
-
+import UserInspectPanelInspector from "../components/UserInspectPanelInspector.vue";
+import UserInspectPanelOther from "../components/UserInspectPanelOther.vue";
+import { mapState } from "vuex";
 export default {
-  data: function () {
-    return {
-      name1: "novahoo",
-      name2: "Chungus",
-      name3: "op",
-      name4: "mangos",
-      name5: "sherlock",
-      numCards1: 5,
-      numCards2: 5,
-      numCards3: 4,
-      numCards4: 2,
-      numCards5: 3,
-      cards: [
-        {
-          text: "Apples",
-        },
-        {
-          text: "Cheeses",
-        },
-        {
-          text: "Hammers",
-        },
-        {
-          text: "Gems",
-        },
-        {
-          text: "Apples",
-        },
-        {
-          text: "Apples",
-        },
-      ],
-    };
+  computed: {
+    ...mapState("GameStage3", ["stage3Data", "numCardsForEachUser"]),
+    ...mapState("GeneralGame", ["generalGameData", "userIndex"]),
+    ...mapState("General", ["pid", "room"]),
+    nonInspectorCards() {
+      const toReturn = [];
+      for (
+        let index = 0;
+        index < this.generalGameData.usernames.length;
+        index++
+      ) {
+        if (index !== this.generalGameData.inspectorIndex) {
+          toReturn.push({
+            username: this.generalGameData.usernames[index],
+            pid: this.generalGameData.pids[index],
+            cards: this.stage3Data.cardsInBag[index],
+            numCards: this.numCardsForEachUser[index],
+            inspectorDecision: this.stage3Data.inspectorDecisions[index],
+          });
+        }
+      }
+      return toReturn;
+    },
+    isRoundDone() {
+      return (
+        this.generalGameData.inspectorIndex === this.userIndex &&
+        this.stage3Data.isChecked.every(Boolean)
+      );
+    },
+  },
+  methods: {
+    mapDecisionToComponent(inspectorDecision) {
+      return inspectorDecision === ""
+        ? "user-inspect-panel-inspector"
+        : "user-inspect-panel-other";
+    },
+    markReady() {
+      this.$socket.client.emit("stage3Ready", {
+        room: this.room,
+      });
+    },
   },
   components: {
-    UserInspectPanel,
+    UserInspectPanelInspector,
+    UserInspectPanelOther,
   },
 };
 </script>

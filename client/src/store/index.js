@@ -5,6 +5,7 @@ import RoomLobby from "./modules/roomLobby";
 import GeneralGame from "./modules/generalGame";
 import GameStage1 from "./modules/gameStage1";
 import GameStage2 from "./modules/gameStage2";
+import GameStage3 from "./modules/gameStage3";
 
 Vue.use(Vuex);
 
@@ -13,6 +14,13 @@ export default new Vuex.Store({
   mutations: {},
   actions: {},
   getters: {},
-  modules: { RoomLobby, General, GeneralGame, GameStage1, GameStage2 },
+  modules: {
+    RoomLobby,
+    General,
+    GeneralGame,
+    GameStage1,
+    GameStage2,
+    GameStage3,
+  },
   strict: process.env.NODE_ENV !== "production",
 });

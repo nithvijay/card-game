@@ -18,7 +18,7 @@
       'bg-blue-200': isUserReady & !active,
       'bg-red-200': isUserReady & active,
     }"
-    @click="clickMethod(card.id)"
+    @click="cardClickMethod(card.id)"
   >
     <i class="fas text-2xl m-3" :class="iconClass"></i>
     <div class="text-sm">{{ card.name }}</div>
@@ -48,6 +48,13 @@ export default {
   computed: {
     iconClass() {
       return this.iconMapper[this.card.name];
+    },
+  },
+  methods: {
+    cardClickMethod(id) {
+      if (!this.isUserReady) {
+        this.clickMethod(id);
+      }
     },
   },
 };

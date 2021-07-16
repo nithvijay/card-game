@@ -10,8 +10,8 @@ const actions = {
     commit("updateStage1Data", stage1Data);
     commit("GeneralGame/setIsReady", stage1Data.isReady, { root: true });
   },
-  initializeCardsSelected: function ({ commit }, cards) {
-    commit("updateCardsSelected", new Array(cards.length).fill(false));
+  socket_initializeCardsSelected: function ({ commit }, numCards) {
+    commit("updateCardsSelected", new Array(parseInt(numCards)).fill(false));
   },
 };
 

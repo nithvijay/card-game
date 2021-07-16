@@ -18,13 +18,8 @@ const actions = {
   socket_updateGeneralGameData: function ({ commit }, generalGameData) {
     commit("updateGeneralGameData", generalGameData);
   },
-  socket_updateUserIndex: function ({ dispatch, commit, state, rootState }) {
+  socket_updateUserIndex: function ({ commit, state, rootState }) {
     const pid = rootState["General"]["pid"];
-    dispatch(
-      `GameStage${state.generalGameData.stage}/initializeCardsSelected`,
-      state.generalGameData.cards[state.userIndex],
-      { root: true }
-    );
     commit("updateUserIndex", state.generalGameData.pids.indexOf(pid));
   },
 };

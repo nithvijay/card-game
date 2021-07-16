@@ -26,7 +26,7 @@ socketio = SocketIO(app, cors_allowed_origins=cors_allowed_origins,
                     async_handlers=True, async_mode='eventlet')  # , message_queue="redis://redis:6379")
 r = redis.Redis(host=REDIS_ADDRESS, port=6379, db=0, decode_responses=True)
 db = DB(r)
-clear_database(db)
+
 init_database(db)
 
 
@@ -169,6 +169,8 @@ def user_rejoin_room(db, pid, username, room, user_index):
 
     emit('updateGeneralGameData', general_game_data, room=room)
     emit('updateUserIndex')  # only for user?
+    emit('initializeCardsSelected',
+         general_game_data['gameConfig']['numCardsInHand'])
 
     emit('debug', {"status": 'before for-loop rejoining room'})
     for stage_num in range(1, int(general_game_data['stage']) + 1):
@@ -260,6 +262,8 @@ def start_stage_1(db, room):
     db.set_json(f'general_game_data:{room}', general_game_data)
     emit('updateGeneralGameData', general_game_data, room=room)
     emit('updateUserIndex', room=room)
+    emit('initializeCardsSelected',
+         max_num_cards_in_hand, room=room)
 
     db.set_json(f'stage_1_data:{room}', stage_1_data)
     emit('updateStage1Data', stage_1_data, room=room)
@@ -324,7 +328,8 @@ def fulfill_discard(db, cards_selected_ids, user_index, room):
         not_discarded), db, room)
     db.set_json(f'general_game_data:{room}', general_game_data)
     emit('updateGeneralGameData', general_game_data, room=room)
-    emit('updateUserIndex')  # only for user?
+    emit('initializeCardsSelected',
+         general_game_data['gameConfig']['numCardsInHand'])
 
 #####
 # Stage 2
@@ -350,7 +355,8 @@ def start_stage_2(db, room):
     db.set_json(f'stage_2_data:{room}', stage_2_data)
     emit('updateStage2Data', stage_2_data, room=room)
     emit('updateGeneralGameData', general_game_data, room=room)
-    emit('updateUserIndex', room=room)
+    emit('initializeCardsSelected',
+         general_game_data['gameConfig']['numCardsInHand'])
 
 
 @socketio.on("stage2SelectCard")
@@ -404,15 +410,16 @@ def start_stage_3(db, room):
     cards_chosen = stage_2_data['cardsChosen']
 
     cards_in_bag = move_cards(cards_chosen, general_game_data)
-    # general_game_data['cards'] = users_cards
     db.set_json(f'general_game_data:{room}', general_game_data)
 
+    inspector_decisions = ['' for _ in general_game_data['pids']]
     is_checked = [False for _ in general_game_data['pids']]
     inspector_index = int(general_game_data['inspectorIndex'])
     is_checked[inspector_index] = True
 
     stage_3_data = {
         'isChecked': is_checked,
+        'inspectorDecisions': inspector_decisions,
         'cardsInBag': cards_in_bag
     }
     db.set_json(f'stage_3_data:{room}', stage_3_data)
@@ -437,6 +444,114 @@ def move_cards(cards_chosen, general_game_data):
                 indexer += 1
         cards_in_bag.append(cards_in_bag_user)
     return cards_in_bag
+
+
+@socketio.on("stage3MakeDecision")
+def on_stage_3_make_decision(data):
+    pid = data['pid']
+    room = data['room']
+    option = data['option']
+
+    emit("debug", {
+        "pid": pid,
+        "room": room,
+        "option": option
+    })
+
+    stage_3_data = db.get_json(f'stage_3_data:{room}')
+    general_game_data = db.get_json(f'general_game_data:{room}')
+
+    user_index = general_game_data['pids'].index(pid)
+    stage_3_data['isChecked'][user_index] = True
+    stage_3_data['inspectorDecisions'][user_index] = option
+
+    db.set_json(f'stage_3_data:{room}', stage_3_data)
+
+    emit('updateStage3Data', stage_3_data, room=room)
+
+
+@socketio.on("stage3Ready")
+def on_stage_3_user_ready(data):
+    # only the inspector declares stage is ready
+    room = data['room']
+
+    emit('debug', {"room": room})
+
+    general_game_data = db.get_json(f'general_game_data:{room}')
+    general_game_data['stage'] = 4
+
+    stage_3_data = db.get_json(f'stage_3_data:{room}')
+
+    scoring_data = [{} for _ in general_game_data['pids']]
+    stage_4_data = {
+        'scoringData': scoring_data
+    }
+
+    inspector_index = general_game_data['inspectorIndex']
+
+    for index, decision in enumerate(stage_3_data['inspectorDecisions']):
+        if index != inspector_index:
+            cards_in_bag_for_user = stage_3_data['cardsInBag'][index]
+
+            card_data = calculate_cards(cards_in_bag_for_user)
+            score = card_data['score']
+            is_positive = None
+
+            if decision == 'let go':
+                is_positive = True
+                general_game_data['scores'][index] += score
+            else:  # decision == 'inspected'
+                # any contraband
+                if (any(card['type'] == 'Contraband' for card in cards_in_bag_for_user)):
+                    is_positive = False
+                    general_game_data['scores'][index] -= score
+                    general_game_data['scores'][inspector_index] += score
+                else:  # no contraband
+                    is_positive = True
+                    general_game_data['scores'][index] += score
+                    general_game_data['scores'][inspector_index] -= score
+
+                stage_4_data['scoringData'][inspector_index] = {
+                    'isPositive': not is_positive,
+                    'score': score,
+                    'cardCounts': card_data['card_counts'],
+                    'keys': card_data['keys']
+                }
+
+            stage_4_data['scoringData'][index] = {
+                'isPositive': is_positive,
+                'score': score,
+                'cardCounts': card_data['card_counts'],
+                'keys': card_data['keys']
+            }
+
+    db.set_json(f'general_game_data:{room}', general_game_data)
+    db.set_json(f'stage_4_data:{room}', stage_4_data)
+
+    emit('updateStage4Data', stage_4_data, room=room)
+    emit('updateGeneralGameData', general_game_data, room=room)
+    emit('debug', {
+        "stage_4_data": stage_4_data,
+        "general_game_data": general_game_data,
+    })
+
+
+def calculate_cards(cards_in_bag_for_user):
+    to_ret = {
+        'score': 0,
+        'card_counts': {}
+    }
+    for card in cards_in_bag_for_user:
+        if to_ret['card_counts'].get(card['name']):
+            to_ret['card_counts'][card['name']]['quantity'] += 1
+        else:
+            to_ret['card_counts'][card['name']] = {
+                'value': card['value'],
+                'quantity': 1
+            }
+        to_ret['score'] += card['value']
+    to_ret['keys'] = sorted(to_ret['card_counts'].keys())
+    return to_ret
 
 
 if __name__ == '__main__':

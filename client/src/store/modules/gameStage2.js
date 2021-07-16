@@ -10,9 +10,8 @@ const actions = {
     commit("updateStage2Data", stage2Data);
     commit("GeneralGame/setIsReady", stage2Data.isReady, { root: true });
   },
-  initializeCardsSelected: function ({ commit }, cards) {
-    console.log("stage 2");
-    commit("updateCardsSelected", new Array(cards.length).fill(false));
+  socket_initializeCardsSelected: function ({ commit }, numCards) {
+    commit("updateCardsSelected", new Array(parseInt(numCards)).fill(false));
   },
   flipCardInCardsSelected: function ({ commit, state, rootState }, flipIndex) {
     const current = state.cardsSelected.slice();
