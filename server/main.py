@@ -2,6 +2,7 @@ import random
 import os
 
 import eventlet
+from flask.helpers import get_env
 import redis
 from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
@@ -483,9 +484,7 @@ def on_stage_3_user_ready(data):
     stage_3_data = db.get_json(f'stage_3_data:{room}')
 
     scoring_data = [{} for _ in general_game_data['pids']]
-    stage_4_data = {
-        'scoringData': scoring_data
-    }
+    inspector_data = []
 
     inspector_index = general_game_data['inspectorIndex']
 
@@ -511,29 +510,55 @@ def on_stage_3_user_ready(data):
                     general_game_data['scores'][index] += score
                     general_game_data['scores'][inspector_index] -= score
 
-                stage_4_data['scoringData'][inspector_index] = {
+                inspector_data.append({
                     'isPositive': not is_positive,
                     'score': score,
                     'cardCounts': card_data['card_counts'],
-                    'keys': card_data['keys']
-                }
+                    'keys': card_data['keys'],
+                    'index': index
+                })
 
-            stage_4_data['scoringData'][index] = {
+            scoring_data[index] = {
                 'isPositive': is_positive,
                 'score': score,
                 'cardCounts': card_data['card_counts'],
                 'keys': card_data['keys']
             }
 
-    db.set_json(f'general_game_data:{room}', general_game_data)
-    db.set_json(f'stage_4_data:{room}', stage_4_data)
+    if check_win(general_game_data):
+        general_game_data['stage'] = 5
+        winner_index = get_winner(general_game_data)
+        stage_5_data = {
+            'winnerIndex': winner_index
+        }
+        db.set_json(f'general_game_data:{room}', general_game_data)
+        db.set_json(f'stage_5_data:{room}', stage_5_data)
 
-    emit('updateStage4Data', stage_4_data, room=room)
-    emit('updateGeneralGameData', general_game_data, room=room)
-    emit('debug', {
-        "stage_4_data": stage_4_data,
-        "general_game_data": general_game_data,
-    })
+        emit('updateStage5Data', stage_5_data, room=room)
+        emit('updateGeneralGameData', general_game_data, room=room)
+
+        room_lobby_status = db.get_json(f"room_lobby_status:{room}")
+        room_lobby_status['started'] = False
+        for member in room_lobby_status['members']:
+            member['isReady'] = False
+        db.set_json(f"room_lobby_status:{room}", room_lobby_status)
+        emit("updateRoomLobbyStatus", room_lobby_status, room=room)
+
+    else:
+        stage_4_data = {
+            'scoringData': format_cards(inspector_index, scoring_data, inspector_data, general_game_data),
+            'isReady': [False for _ in general_game_data['pids']]
+        }
+
+        db.set_json(f'general_game_data:{room}', general_game_data)
+        db.set_json(f'stage_4_data:{room}', stage_4_data)
+
+        emit('updateStage4Data', stage_4_data, room=room)
+        emit('updateGeneralGameData', general_game_data, room=room)
+        emit('debug', {
+            "stage_4_data": stage_4_data,
+            "general_game_data": general_game_data,
+        })
 
 
 def calculate_cards(cards_in_bag_for_user):
@@ -552,6 +577,74 @@ def calculate_cards(cards_in_bag_for_user):
         to_ret['score'] += card['value']
     to_ret['keys'] = sorted(to_ret['card_counts'].keys())
     return to_ret
+
+
+def format_cards(inspector_index, scoring_data, inspector_data, general_game_data):
+    to_ret = []
+    for index, user in enumerate(scoring_data):
+        user_data = []
+        if index == inspector_index:
+            for set_of_cards in inspector_data:
+                for key in set_of_cards['keys']:
+                    new_resource = set_of_cards['cardCounts'][key].copy()
+                    new_resource['name'] = key
+                    new_resource['sign'] = "+" if set_of_cards['isPositive'] else "-"
+                    new_resource['username'] = general_game_data['usernames'][set_of_cards['index']]
+                    user_data.append(new_resource)
+        else:
+            for key in user['keys']:
+                new_resource = user['cardCounts'][key]
+                new_resource['name'] = key
+                new_resource['sign'] = "+" if user['isPositive'] else "-"
+                user_data.append(new_resource)
+        to_ret.append(user_data)
+    return to_ret
+
+
+def check_win(general_game_data):
+    score_to_win = general_game_data['config']['scoreToWin']
+    return any(score >= score_to_win for score in general_game_data['scores'])
+
+
+def get_winner(general_game_data):
+    max_score = max(general_game_data['scores'])
+    winning_user_indices = [user_index for user_index,
+                            score in general_game_data['scores'] if score == max_score]
+    if len(winning_user_indices) > 1:  # multiple winners
+        total_card_values = []
+        for user_index in winning_user_indices:
+            card_values = sum(int(card['value'])
+                              for card in general_game_data['cards'][user_index])
+            total_card_values.append(card_values)
+        winner_index = total_card_values.index(max(total_card_values))
+        return winning_user_indices[winner_index]
+    else:
+        return winning_user_indices[0]
+
+######
+# Stage 4
+######
+
+
+@socketio.on("stage4UserReady")
+def on_stage_4_user_ready(data):
+    pid = data['pid']
+    room = data['room']
+
+    general_game_data = db.get_json(f'general_game_data:{room}')
+    user_index = general_game_data['pids'].index(pid)
+
+    stage_4_data = db.get_json(f'stage_4_data:{room}')
+    stage_4_data['isReady'][user_index] = True
+    db.set_json(f'stage_4_data:{room}', stage_4_data)
+    emit('updateStage4Data', stage_4_data, room=room)
+
+    if all(stage_4_data['isReady']):
+        general_game_data['inspectorIndex'] = (
+            int(general_game_data['inspectorIndex']) + 1) % len(general_game_data['pids'])
+        general_game_data['stage'] = 1
+        db.set_json(f'general_game_data:{room}', general_game_data)
+        start_stage_1(db, room)
 
 
 if __name__ == '__main__':

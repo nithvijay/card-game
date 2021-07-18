@@ -1,12 +1,32 @@
 <template>
-  <div class="grid grid-cols-12 bg-blue-800 p-2 rounded-md shadow-md">
+  <div
+    class="
+      grid grid-cols-12
+      w-full
+      max-w-sm
+      bg-blue-800
+      p-2
+      rounded-md
+      shadow-md
+    "
+  >
     <div class="text-left col-span-12 text-gray-100 font-semibold">
-      {{ name }}
+      {{ name }} - Inspector
     </div>
     <template v-for="(item, index) in summary">
       <div
+        :key="`symbol-${index}`"
+        class="col-span-6 text-left text-gray-200 px-2"
+        :class="{
+          'bg-green-700': item.sign === '+',
+          'bg-red-700': item.sign === '-',
+        }"
+      >
+        From {{ item.username }}
+      </div>
+      <div
         :key="`text-${index}`"
-        class="text-right text-gray-200 col-span-12 px-2"
+        class="col-span-6 text-right text-gray-200 px-2"
         :class="{
           'bg-green-700': item.sign === '+',
           'bg-red-700': item.sign === '-',
@@ -18,7 +38,12 @@
       </div>
     </template>
     <div
-      class="border-t-2 border-blue-200 text-right text-gray-100 col-span-12"
+      class="
+        border-t-2 border-blue-200
+        text-right text-gray-100
+        col-span-12
+        px-1
+      "
     >
       Total: {{ score }}
     </div>
@@ -31,6 +56,7 @@ export default {
     summary: Array,
     name: String,
     score: Number,
+    inspectorIndex: Number,
   },
   methods: {
     totalValue(value, quantity) {
