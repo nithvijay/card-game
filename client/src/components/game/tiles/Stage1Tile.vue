@@ -1,23 +1,29 @@
 <template>
   <div class="flex flex-col">
-    <div>
-      {{ userIndex }}
-    </div>
-    <transition-group
-      name="fade"
-      class="flex flex-wrap gap-2 p-2 justify-center"
-      tag="div"
+    <div
+      v-if="userIndex !== generalGameData.inspectorIndex"
+      class="text-center font-bold"
     >
-      <user-card
-        :key="card.id"
-        v-for="(card, index) in getUserCards"
-        :card="card"
-        :active="cardsSelected[index]"
-        :clickMethod="selectCardToDiscard"
-        :isUserReady="!isUserNotReady"
-      />
-    </transition-group>
-    {{ cardsSelected }}
+      Select cards to discard
+    </div>
+    <div v-else class="text-center font-bold">You are in the inspector</div>
+
+    <template v-if="userIndex !== generalGameData.inspectorIndex">
+      <transition-group
+        name="fade"
+        class="flex flex-wrap gap-2 p-2 justify-center"
+        tag="div"
+      >
+        <user-card
+          :key="card.id"
+          v-for="(card, index) in getUserCards"
+          :card="card"
+          :active="cardsSelected[index]"
+          :clickMethod="selectCardToDiscard"
+          :isUserReady="!isUserNotReady"
+        />
+      </transition-group>
+    </template>
     <div class="text-center">
       <button
         v-if="isUserNotReady"

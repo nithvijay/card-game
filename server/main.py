@@ -287,6 +287,7 @@ def on_change_score_to_win(data):
     room = data['room']
     setting = data['setting']
     value = data['value']
+    emit('debug', {"setting": setting, "value": value})
     room_lobby_status = db.get_json(f"room_lobby_status:{room}")
 
     room_lobby_status['config'][setting] = value
@@ -476,7 +477,7 @@ def on_stage_3_user_ready(data):
     # only the inspector declares stage is ready
     room = data['room']
 
-    emit('debug', {"room": room})
+    emit('debug', {"status": 'stage_3_ready'})
 
     general_game_data = db.get_json(f'general_game_data:{room}')
     general_game_data['stage'] = 4
@@ -526,6 +527,7 @@ def on_stage_3_user_ready(data):
             }
 
     if check_win(general_game_data):
+        emit('debug', {"status": 'check_win'})
         general_game_data['stage'] = 5
         winner_index = get_winner(general_game_data)
         stage_5_data = {
@@ -538,7 +540,7 @@ def on_stage_3_user_ready(data):
         emit('updateGeneralGameData', general_game_data, room=room)
 
         room_lobby_status = db.get_json(f"room_lobby_status:{room}")
-        room_lobby_status['started'] = False
+        # room_lobby_status['started'] = False
         for member in room_lobby_status['members']:
             member['isReady'] = False
         db.set_json(f"room_lobby_status:{room}", room_lobby_status)
@@ -602,14 +604,17 @@ def format_cards(inspector_index, scoring_data, inspector_data, general_game_dat
 
 
 def check_win(general_game_data):
-    score_to_win = general_game_data['config']['scoreToWin']
-    return any(score >= score_to_win for score in general_game_data['scores'])
+    score_to_win = int(general_game_data['gameConfig']['scoreToWin'])
+    return any(int(score) >= score_to_win for score in general_game_data['scores'])
 
 
 def get_winner(general_game_data):
-    max_score = max(general_game_data['scores'])
+    emit('debug', {"status": general_game_data['scores']})
+    int_scores = [int(score) + 1 for score in general_game_data['scores']]
+    max_score = max(int_scores)
     winning_user_indices = [user_index for user_index,
-                            score in general_game_data['scores'] if score == max_score]
+                            score in enumerate(int_scores) if score == max_score]
+
     if len(winning_user_indices) > 1:  # multiple winners
         total_card_values = []
         for user_index in winning_user_indices:
@@ -619,6 +624,7 @@ def get_winner(general_game_data):
         winner_index = total_card_values.index(max(total_card_values))
         return winning_user_indices[winner_index]
     else:
+        emit("debug", {'status': 'one_winner'})
         return winning_user_indices[0]
 
 ######
@@ -645,6 +651,15 @@ def on_stage_4_user_ready(data):
         general_game_data['stage'] = 1
         db.set_json(f'general_game_data:{room}', general_game_data)
         start_stage_1(db, room)
+
+
+#####
+# Stage 5
+#####
+
+@socketio.on("stage5GoToLobby")
+def on_stage_5_go_to_lobby(data):
+    emit("setPageView", 'room-lobby-view')
 
 
 if __name__ == '__main__':

@@ -6,6 +6,7 @@
       :isInspector="index === inspectorIndex"
       :name="username"
       :state="isReady[index]"
+      :score="scores[index]"
     />
   </div>
 </template>
@@ -22,6 +23,9 @@ export default {
     },
     inspectorIndex() {
       return this.generalGameData.inspectorIndex;
+    },
+    scores() {
+      return this.generalGameData.scores;
     },
   },
   components: {

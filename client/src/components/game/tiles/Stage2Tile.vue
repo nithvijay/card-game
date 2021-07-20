@@ -1,5 +1,12 @@
 <template>
   <div class="flex flex-col">
+    <div
+      v-if="userIndex !== generalGameData.inspectorIndex"
+      class="text-center font-bold"
+    >
+      Select cards to put in your bag
+    </div>
+    <div v-else class="text-center font-bold">You are in the inspector</div>
     <div class="flex flex-wrap gap-2 p-2 justify-center">
       <div v-for="(username, index) in generalGameData.usernames" :key="index">
         <user-num-cards-stage-2
