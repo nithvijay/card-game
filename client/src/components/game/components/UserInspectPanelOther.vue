@@ -21,17 +21,19 @@
     </div>
 
     <user-num-cards-stage-2 :name="name" :numCards="numCards" />
-    <transition name="fade">
-      <div class="flex flex-wrap justify-center gap-1 p-1">
-        <user-card
-          :key="index"
-          v-for="(card, index) in cards"
-          :card="card"
-          :active="false"
-          :isUserReady="true"
-        />
-      </div>
-    </transition>
+    <transition-group
+      name="fade"
+      tag="div"
+      class="flex flex-wrap justify-center gap-1 p-1"
+    >
+      <user-card
+        :key="card.id"
+        v-for="card in cards"
+        :card="card"
+        :active="false"
+        :isUserReady="true"
+      />
+    </transition-group>
   </div>
 </template>
 
@@ -68,11 +70,7 @@ export default {
 
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  opacity: 0;
+.fade-move {
+  transition: transform 1s;
 }
 </style>

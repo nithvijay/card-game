@@ -43,20 +43,25 @@ def on_disconnect():
 
     if db.exists(f"last_active_room:{pid}"):
         last_active_room = db.get(f"last_active_room:{pid}")
+        remove_player_from_room(pid, last_active_room)
         room_lobby_status = db.get_json(
             f'room_lobby_status:{last_active_room}')
-        new_room_lobby_status_members = [
-            member for member in room_lobby_status['members'] if member['pid'] != pid]
-        room_lobby_status['members'] = new_room_lobby_status_members
-        db.set_json(f'room_lobby_status:{last_active_room}', room_lobby_status)
-        emit("updateRoomLobbyStatus", room_lobby_status, room=last_active_room)
-
         db.delete(f"last_active_room:{pid}")
         # no game started and no one in room
-        if not room_lobby_status['started'] and len(new_room_lobby_status_members) == 0:
+        if not room_lobby_status['started'] and len(room_lobby_status['members']) == 0:
             db.delete(f'room_lobby_status:{last_active_room}')
             db.srem("set_of_rooms", last_active_room)
-            # TODO: db.delete(f'room_game_data:{last_active_room}')
+            db.delete(f'general_game_data:{last_active_room}')
+
+
+def remove_player_from_room(pid, room):
+    leave_room(room)
+    room_lobby_status = db.get_json(f'room_lobby_status:{room}')
+    new_room_lobby_status_members = [
+        member for member in room_lobby_status['members'] if member['pid'] != pid]
+    room_lobby_status['members'] = new_room_lobby_status_members
+    db.set_json(f'room_lobby_status:{room}', room_lobby_status)
+    emit("updateRoomLobbyStatus", room_lobby_status, room=room)
 
 
 @socketio.on("pageLoaded")
@@ -173,7 +178,6 @@ def user_rejoin_room(db, pid, username, room, user_index):
     emit('initializeCardsSelected',
          general_game_data['gameConfig']['numCardsInHand'])
 
-    emit('debug', {"status": 'before for-loop rejoining room'})
     for stage_num in range(1, int(general_game_data['stage']) + 1):
         stage_data = db.get_json(f'stage_{stage_num}_data:{room}')
         # TODO: only emit to user?
@@ -213,10 +217,9 @@ def on_change_ready_status_room_lobby(data):
             member['isReady'] = isReady
         all_ready = all_ready and member['isReady']
 
-    if all_ready:
+    if (len(room_lobby_status['members']) >= 3) and all_ready:
         start_new_game(db, room, room_lobby_status)
         start_stage_1(db, room)
-
     else:
         db.set_json(f"room_lobby_status:{room}", room_lobby_status)
         emit("updateRoomLobbyStatus", room_lobby_status, room=room)
@@ -287,13 +290,20 @@ def on_change_score_to_win(data):
     room = data['room']
     setting = data['setting']
     value = data['value']
-    emit('debug', {"setting": setting, "value": value})
     room_lobby_status = db.get_json(f"room_lobby_status:{room}")
 
     room_lobby_status['config'][setting] = value
     db.set_json(f"room_lobby_status:{room}", room_lobby_status)
     # slightly more efficient than sending entire room_lobby_status? however, when room_lobby_status updates from players getting ready, the roomConfig will also update
     emit("updateRoomConfig", {'setting': setting, 'value': value}, room=room)
+
+
+@socketio.on("returnToLogin")
+def on_return_to_login(data):
+    room = data['room']
+    pid = data['pid']
+    remove_player_from_room(pid, room)
+    emit("setPageView", 'login-view')
 
 #####
 # Stage 1
@@ -306,7 +316,6 @@ def on_stage_1_user_ready(data):
     room = data['room']
     cards_selected_ids = data['cardsSelectedIds']
 
-    # TODO: get this from client for one less db call?
     general_game_data = db.get_json(f'general_game_data:{room}')
     user_index = general_game_data['pids'].index(pid)
 
@@ -379,11 +388,11 @@ def on_stage_2_user_ready(data):
     room = data['room']
     cards_selected_ids = data['cardsSelectedIds']
 
-    emit('debug', {
-        "pid": pid,
-        "room": room,
-        "cards_selected_ids": cards_selected_ids
-    })
+    # emit('debug', {
+    #     "pid": pid,
+    #     "room": room,
+    #     "cards_selected_ids": cards_selected_ids
+    # })
 
     general_game_data = db.get_json(f'general_game_data:{room}')
     user_index = general_game_data['pids'].index(pid)
@@ -427,10 +436,10 @@ def start_stage_3(db, room):
     db.set_json(f'stage_3_data:{room}', stage_3_data)
     emit('updateStage3Data', stage_3_data, room=room)
     emit('updateGeneralGameData', general_game_data, room=room)
-    emit('debug', {
-        "stage_3_data": stage_3_data,
-        "general_game_data": general_game_data,
-    })
+    # emit('debug', {
+    #     "stage_3_data": stage_3_data,
+    #     "general_game_data": general_game_data,
+    # })
 
 
 def move_cards(cards_chosen, general_game_data):
@@ -454,11 +463,11 @@ def on_stage_3_make_decision(data):
     room = data['room']
     option = data['option']
 
-    emit("debug", {
-        "pid": pid,
-        "room": room,
-        "option": option
-    })
+    # emit("debug", {
+    #     "pid": pid,
+    #     "room": room,
+    #     "option": option
+    # })
 
     stage_3_data = db.get_json(f'stage_3_data:{room}')
     general_game_data = db.get_json(f'general_game_data:{room}')
@@ -477,7 +486,7 @@ def on_stage_3_user_ready(data):
     # only the inspector declares stage is ready
     room = data['room']
 
-    emit('debug', {"status": 'stage_3_ready'})
+    # emit('debug', {"status": 'stage_3_ready'})
 
     general_game_data = db.get_json(f'general_game_data:{room}')
     general_game_data['stage'] = 4
@@ -531,7 +540,8 @@ def on_stage_3_user_ready(data):
         general_game_data['stage'] = 5
         winner_index = get_winner(general_game_data)
         stage_5_data = {
-            'winnerIndex': winner_index
+            'winnerIndex': winner_index,
+            'sortedScoresIndex': return_rankings(general_game_data['scores'])
         }
         db.set_json(f'general_game_data:{room}', general_game_data)
         db.set_json(f'stage_5_data:{room}', stage_5_data)
@@ -540,7 +550,7 @@ def on_stage_3_user_ready(data):
         emit('updateGeneralGameData', general_game_data, room=room)
 
         room_lobby_status = db.get_json(f"room_lobby_status:{room}")
-        # room_lobby_status['started'] = False
+        room_lobby_status['started'] = False
         for member in room_lobby_status['members']:
             member['isReady'] = False
         db.set_json(f"room_lobby_status:{room}", room_lobby_status)
@@ -587,12 +597,14 @@ def format_cards(inspector_index, scoring_data, inspector_data, general_game_dat
         user_data = []
         if index == inspector_index:
             for set_of_cards in inspector_data:
+                inspector_resources = []
                 for key in set_of_cards['keys']:
                     new_resource = set_of_cards['cardCounts'][key].copy()
                     new_resource['name'] = key
                     new_resource['sign'] = "+" if set_of_cards['isPositive'] else "-"
                     new_resource['username'] = general_game_data['usernames'][set_of_cards['index']]
-                    user_data.append(new_resource)
+                    inspector_resources.append(new_resource)
+                user_data.append(inspector_resources)
         else:
             for key in user['keys']:
                 new_resource = user['cardCounts'][key]
@@ -626,6 +638,10 @@ def get_winner(general_game_data):
     else:
         emit("debug", {'status': 'one_winner'})
         return winning_user_indices[0]
+
+
+def return_rankings(scores):
+    return sorted(range(len(scores)), key=lambda k: -int(scores[k]))
 
 ######
 # Stage 4

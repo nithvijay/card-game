@@ -118,24 +118,18 @@ export default {
 </script>
 
 <style scoped>
-/* .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.5s;
+  display: none;
 }
-.fade-enter, .fade-leave-to {
+.fade-enter {
   opacity: 0;
-} */
-
-/* .fade-complete-item {
-  transition: all 1s;
+  background-color: rgb(54, 184, 128);
 }
-
-.fade-complete-enter,
-.fade-complete-leave-to {
-  opacity: 0;
-  transform: translateY(30px);
+.fade-enter-to {
+  opacity: 1;
+  background-color: rgb(54, 184, 128);
 }
-.fade-complete-leave-active {
-  position: absolute;
-} */
+.fade-move {
+  transition: transform 0.4s;
+}
 </style>

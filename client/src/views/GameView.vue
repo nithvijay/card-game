@@ -1,6 +1,5 @@
 <template>
-  <div class="container max-w-sm mx-auto flex flex-col gap-2">
-    <div class="h-4 bg-blue-400"></div>
+  <div class="flex flex-col max-w-3xl bg-blue-300 mx-auto gap-2 items-center">
     <turn-tile />
     <transition name="component-fade" mode="out-in">
       <component :is="view" />
@@ -42,12 +41,15 @@ export default {
 </script>
 
 <style scoped>
-.component-fade-enter-active,
-.component-fade-leave-active {
+.component-fade-enter-active {
   transition: opacity 0.3s ease;
 }
-.component-fade-enter, .component-fade-leave-to
-/* .component-fade-leave-active below version 2.1.8 */ {
+.component-fade-leave-active {
+  transition: opacity 0.3s ease;
+  transition-delay: 0.3s;
+}
+.component-fade-enter,
+.component-fade-leave-to {
   opacity: 0;
 }
 </style>

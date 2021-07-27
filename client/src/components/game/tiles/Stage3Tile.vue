@@ -1,6 +1,5 @@
 <template>
-  <div class="flex flex-col gap-2 items-center">
-    {{ stage3Data }}
+  <div class="flex flex-wrap gap-2 justify-center">
     <template v-if="generalGameData.inspectorIndex === userIndex">
       <component
         v-for="(user, index) in nonInspectorCards"

@@ -45,11 +45,6 @@ export default {
           setting: this.settingName,
           value: value,
         });
-
-        // this.$store.dispatch(
-        //   `${[this.namespace]}/${this.vuexRadioGroupAction}`,
-        //   value
-        // );
       },
     },
     ...mapState("General", ["room"]),

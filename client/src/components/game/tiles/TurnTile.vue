@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-wrap justify-center gap-1">
+  <div class="flex flex-wrap justify-center gap-1 mt-2">
     <user-label
       v-for="(username, index) in usernames"
       :key="index"

@@ -1,51 +1,46 @@
 <template>
-  <div
-    class="
-      grid grid-cols-12
-      w-full
-      max-w-sm
-      bg-blue-800
-      p-2
-      rounded-md
-      shadow-md
-    "
-  >
-    <div class="text-left col-span-12 text-gray-100 font-semibold">
-      {{ name }} - Inspector
-    </div>
-    <template v-for="(item, index) in summary">
+  <div class="bg-blue-800 py-2 px-4 rounded-md shadow-md text-indigo-50">
+    <div class="flex flex-col gap-2">
+      <div class="text-gray-100 font-semibold">{{ name }} - Inspector</div>
       <div
-        :key="`symbol-${index}`"
-        class="col-span-6 text-left text-gray-200 px-2"
+        class="flex justify-between rounded-md px-1 gap-4"
+        v-for="(items, index) in summary"
+        :key="index"
         :class="{
-          'bg-green-700': item.sign === '+',
-          'bg-red-700': item.sign === '-',
+          'bg-green-700': items[0].sign === '+',
+          'bg-red-700': items[0].sign === '-',
         }"
       >
-        From {{ item.username }}
+        <div class="flex items-center py-1">
+          <div
+            class="rounded-md px-3"
+            :class="{
+              'bg-green-800': items[0].sign === '+',
+              'bg-red-800': items[0].sign === '-',
+            }"
+          >
+            {{ items[0].username }}
+          </div>
+        </div>
+
+        <div class="flex flex-col text-right text-sm">
+          <div v-for="(item, index) in items" :key="index">
+            {{ item.quantity }} x {{ item.name }} -
+            {{ totalValue(item.value, item.quantity) }}
+            <i class="fas fa-coins" />
+          </div>
+        </div>
       </div>
       <div
-        :key="`text-${index}`"
-        class="col-span-6 text-right text-gray-200 px-2"
-        :class="{
-          'bg-green-700': item.sign === '+',
-          'bg-red-700': item.sign === '-',
-        }"
+        class="
+          border-t-2 border-blue-200
+          text-right text-gray-100
+          col-span-12
+          px-1
+        "
       >
-        {{ item.quantity }} x {{ item.name }} -
-        {{ totalValue(item.value, item.quantity) }}
-        <i class="fas fa-coins" />
+        Total: {{ score }}
       </div>
-    </template>
-    <div
-      class="
-        border-t-2 border-blue-200
-        text-right text-gray-100
-        col-span-12
-        px-1
-      "
-    >
-      Total: {{ score }}
     </div>
   </div>
 </template>

@@ -14,7 +14,7 @@
     <div class="border-b-2 border-blue-500">
       {{ name }}
     </div>
-    <div>{{ numCards }} Card(s)</div>
+    <div>{{ boundedNumCards }} Card(s)</div>
 
     <!-- <button @click.prevent="increment">Increment</button> -->
     <div class="relative mx-2">
@@ -29,7 +29,7 @@
             h-16
           "
           :class="`left-${(index - 1) * 4}`"
-          v-for="index in numCards"
+          v-for="index in boundedNumCards"
           :key="index"
         />
       </transition-group>
@@ -42,6 +42,11 @@ export default {
   props: {
     name: String,
     numCards: Number,
+  },
+  computed: {
+    boundedNumCards() {
+      return this.numCards > 5 ? 5 : this.numCards;
+    },
   },
   methods: {
     increment() {

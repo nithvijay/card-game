@@ -4,13 +4,6 @@
       <game-view v-if="pageView === 'game-view'" />
       <login-view v-if="pageView === 'login-view'" />
       <room-lobby-view v-if="pageView === 'room-lobby-view'" />
-      <!-- <button
-        class="bg-white p-1 rounded-md"
-        type="button"
-        @click.prevent="switchViews"
-      >
-        Click Here
-      </button> -->
       <button
         class="bg-white p-1 rounded-md"
         type="button"
@@ -70,7 +63,3 @@ export default {
   },
 };
 </script>
-
-
-<style>
-</style>

@@ -7,7 +7,7 @@
       rounded-md
       shadow-md
       items-center
-      w-3/4
+      w-48
       gap-1
     "
   >

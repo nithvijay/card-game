@@ -27,8 +27,6 @@
         :vuexRadioGroupAction="numCardsInHandRadioGroupActionName"
       />
     </div>
-    {{ scoreToWin }}
-    {{ numCardsInHand }}
   </div>
 </template>
 

@@ -1,6 +1,5 @@
 <template>
   <div>
-    {{ stage4Data }}
     <div class="flex flex-wrap items-start justify-center gap-1 p-2">
       <score-summary-stage-4-inspector
         :summary="stage4Data.scoringData[generalGameData.inspectorIndex]"
@@ -23,18 +22,20 @@
         type="button"
         class="
           text-lg
-          bg-blue-700
-          hover:bg-blue-600
+          bg-blue-800
+          hover:bg-blue-700
+          active:bg-blue-600
           transition
           duration:300
-          rounded-xl
+          rounded-md
+          shadow-md
           text-gray-100
           py-2
           px-20
         "
         @click="markReady"
       >
-        Submit
+        Next Round
       </button>
       <div v-else-if="getUsersNotReady.length">
         Waiting for {{ getUsersNotReady }}
