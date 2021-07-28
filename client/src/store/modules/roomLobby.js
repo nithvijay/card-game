@@ -3,6 +3,7 @@ import { getField, updateField } from "vuex-map-fields";
 const state = () => ({
   scoreToWin: "",
   numCardsInHand: "",
+  seed: "",
   roomLobbyStatus: {},
 });
 
@@ -24,17 +25,7 @@ const actions = {
     commit("updateRoomLobbyStatus", roomLobbyStatus);
     commit("setScoreToWin", roomLobbyStatus["config"]["scoreToWin"]);
     commit("setNumCardsInHand", roomLobbyStatus["config"]["numCardsInHand"]);
-  },
-  socket_updateRoomConfig: function ({ commit }, roomConfig) {
-    // potentially remove because redundant code, but improves efficiency a little bit?
-    switch (roomConfig["setting"]) {
-      case "scoreToWin":
-        commit("setScoreToWin", roomConfig["value"]);
-        break;
-      case "numCardsInHand":
-        commit("setNumCardsInHand", roomConfig["value"]);
-        break;
-    }
+    commit("setSeed", roomLobbyStatus["config"]["seed"]);
   },
 };
 
@@ -44,6 +35,9 @@ const mutations = {
   },
   setNumCardsInHand: function (state, numCardsInHand) {
     state.numCardsInHand = numCardsInHand;
+  },
+  setSeed: function (state, seed) {
+    state.seed = seed;
   },
   updateRoomLobbyStatus: function (state, roomLobbyStatus) {
     state.roomLobbyStatus = roomLobbyStatus;

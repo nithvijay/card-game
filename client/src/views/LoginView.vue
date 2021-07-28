@@ -47,11 +47,10 @@
           transition
           duration-300
           focus:bg-white
-          focus:border-blue-800
         "
         :class="{
-          'border-gray-100': isRoomValid,
-          'border-red-500': !isRoomValid,
+          'border-gray-100 focus:border-blue-800': isRoomValid,
+          'border-red-500 focus:border-red-500': !isRoomValid,
         }"
         type="text"
         v-model="roomModel"

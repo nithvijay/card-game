@@ -30,7 +30,6 @@ export default {
     namespace: String,
     settingName: String,
     vuexRadioGroupState: String,
-    vuexRadioGroupAction: String,
   },
   computed: {
     RadioGroupModel: {
@@ -39,7 +38,6 @@ export default {
         return this.$store.state[this.namespace][this.vuexRadioGroupState];
       },
       set(value) {
-        console.log("how");
         this.$socket.client.emit("changeRoomConfig", {
           room: this.room,
           setting: this.settingName,

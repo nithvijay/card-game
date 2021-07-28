@@ -109,7 +109,10 @@ def on_submit_login_info(data):
         room_lobby_status['members'] = []
         # come up with better system for initial values
         room_lobby_status['config'] = {
-            'scoreToWin': '50', 'numCardsInHand': '3'}
+            'scoreToWin': '50',
+            'numCardsInHand': '3',
+            'seed': ''
+        }
         db.set_json(f"room_lobby_status:{room}", room_lobby_status)
 
         add_user_to_room(db, pid, username, room)
@@ -276,6 +279,11 @@ def start_stage_1(db, room):
 
 def gen_cards(CARDS, max_num, num_in_hand, db, room):
     ret_cards = []
+    room_lobby_status = db.get_json(f"room_lobby_status:{room}")
+    if room_lobby_status['config']['seed']:
+        random.seed(
+            db.get(f'card_id_start:{room}') + room_lobby_status['config']['seed'])
+
     for _ in range(int(max_num) - int(num_in_hand)):
         card = random.choice(CARDS).copy()
         card_id_start = db.get(f'card_id_start:{room}')
@@ -294,8 +302,7 @@ def on_change_score_to_win(data):
 
     room_lobby_status['config'][setting] = value
     db.set_json(f"room_lobby_status:{room}", room_lobby_status)
-    # slightly more efficient than sending entire room_lobby_status? however, when room_lobby_status updates from players getting ready, the roomConfig will also update
-    emit("updateRoomConfig", {'setting': setting, 'value': value}, room=room)
+    emit("updateRoomLobbyStatus", room_lobby_status, room=room)
 
 
 @socketio.on("returnToLogin")
