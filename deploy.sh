@@ -30,7 +30,7 @@
 sudo mv nginx.conf /etc/nginx/nginx.conf
 
 export ENVIRONMENT=PROD
-export AWS_ADDRESS=http://ec2-18-204-6-243.compute-1.amazonaws.com
+export AWS_ADDRESS=http://ec2-100-25-192-54.compute-1.amazonaws.com
 export REDIS_ADDRESS=redis-one.uzmwbi.0001.use1.cache.amazonaws.com
 export REACT_APP_AWS_ADDRESS=$AWS_ADDRESS
 

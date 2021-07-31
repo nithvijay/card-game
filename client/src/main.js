@@ -6,7 +6,11 @@ import App from "./App.vue";
 import store from "./store";
 import "./index.css";
 
-const socket = io("http://localhost:5000");
+const host =
+  process.env.NODE_ENV !== "production"
+    ? "http://localhost:5000"
+    : process.env.REACT_APP_AWS_ADDRESS;
+const socket = io(host);
 
 Vue.config.productionTip = false;
 
