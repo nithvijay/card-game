@@ -68,7 +68,14 @@ const secondCypress = wait(5000).then(() => {
   });
 });
 
-Promise.all([firstCypress, secondCypress]).then(() => {
+const thirdCypress = wait(10000).then(() => {
+  console.log("starting the third Cypress");
+  return cypressAction({
+    configFile: "cy-third-user.json",
+  });
+});
+
+Promise.all([firstCypress, secondCypress, thirdCypress]).then(() => {
   // TODO: exit with the test code from both runners
   console.log("all done, exiting");
   process.exit(0);

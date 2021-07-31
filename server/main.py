@@ -18,7 +18,7 @@ app = Flask(__name__)
 # ENV Variables
 ENVIRONMENT = os.getenv('ENVIRONMENT', 'DEV')
 AWS_ADDRESS = os.environ.get('AWS_ADDRESS')
-REDIS_ADDRESS = os.getenv('REDIS_ADDRESS', 'redis')
+REDIS_ADDRESS = os.getenv('REDIS_ADDRESS', 'localhost')
 
 cors_allowed_origins = ['http://localhost:3000',
                         'http://localhost:8080'] if ENVIRONMENT == 'DEV' else [AWS_ADDRESS]
@@ -121,9 +121,9 @@ def on_submit_login_info(data):
         if room_lobby_status['started']:
             general_game_data = db.get_json(f'general_game_data:{room}')
 
-            doesPidExist, user_index = check_if_pid_exists_in_room(
+            does_pid_exist, user_index = check_if_pid_exists_in_room(
                 general_game_data, pid)
-            if doesPidExist:  # if pid in the room, accept and change username
+            if does_pid_exist:  # if pid in the room, accept and change username
                 if general_game_data['usernames'][user_index] == username:  # same username
                     user_rejoin_room(db, pid, username, room,
                                      user_index=user_index)

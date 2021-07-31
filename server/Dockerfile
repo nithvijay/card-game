@@ -1,21 +1,19 @@
-# For more information, please refer to https://aka.ms/vscode-docker-python
 FROM python:3.8-slim-buster
 
-# # Keeps Python from generating .pyc files in the container
-# ENV PYTHONDONTWRITEBYTECODE=1
+RUN python3 -m pip install --upgrade pip
 
-# # Turns off buffering for easier container logging
-# ENV PYTHONUNBUFFERED=1
+RUN useradd --create-home --shell /bin/bash worker
+USER worker
 
-# Install pip requirements
+WORKDIR /home/worker
 
-WORKDIR /code
-COPY . /code/
-RUN python -m pip install -r requirements.txt
+ENV REDIS_ADDRESS=redis
 
-# # Switching to a non-root user, please refer to https://aka.ms/vscode-docker-python-user-rights
-# RUN useradd appuser && chown -R appuser /app
-# USER appuser
+COPY --chown=worker:worker requirements.txt requirements.txt
+RUN python3 -m pip install --user -r requirements.txt
 
-# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
+COPY --chown=worker:worker . .
+
+EXPOSE 5000
+
 CMD ["python", "main.py"]
