@@ -1,6 +1,7 @@
 <template>
-  <div class="flex flex-col max-w-3xl bg-blue-300 mx-auto gap-2 items-center">
+  <div class="flex flex-col max-w-3xl mx-auto gap-2 items-center">
     <turn-tile />
+    <div>Stage: {{ this.generalGameData.stage }}</div>
     <transition name="component-fade" mode="out-in">
       <component :is="view" />
     </transition>

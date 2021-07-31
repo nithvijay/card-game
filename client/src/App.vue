@@ -4,13 +4,13 @@
       <game-view v-if="pageView === 'game-view'" />
       <login-view v-if="pageView === 'login-view'" />
       <room-lobby-view v-if="pageView === 'room-lobby-view'" />
-      <button
+      <!-- <button
         class="bg-white p-1 rounded-md"
         type="button"
         @click.prevent="clearStorage"
       >
         Clear Storage
-      </button>
+      </button> -->
     </div>
   </div>
 </template>

@@ -1,6 +1,5 @@
 <template>
   <div class="flex flex-col p-3 gap-2">
-    {{ roomLobbyStatus }}
     <div>Points to Win</div>
     <div class="flex gap-1">
       <!-- scoreToWin Radio Group -->
