@@ -1,0 +1,14 @@
+version: 0.0
+os: linux
+files:
+  - source: .
+    destination: /home/ec2-user
+hooks:
+  ApplicationStop:
+    - location: aws/code-deploy/scripts/applicationStop.sh
+  BeforeInstall:
+    - location: aws/code-deploy/scripts/beforeInstall.sh
+  AfterInstall:
+    - location: aws/code-deploy/scripts/afterInstall.sh
+  ApplicationStart:
+    - location: aws/code-deploy/scripts/applicationStart.sh
