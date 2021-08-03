@@ -12,7 +12,7 @@ rm -r /data/dist
 mv dist/ /data/
 
 cd ../server
-python3 -m venv card-game-env
+python3.8 -m venv card-game-env
 source card-game-env/bin/activate
 pip install -r requirements.txt
 
