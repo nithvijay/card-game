@@ -4,12 +4,6 @@ files:
   - source: .
     destination: /home/ec2-user
 hooks:
-  ApplicationStop:
-    - location: aws/code-deploy/scripts/applicationStop.sh
-    - runas: ec2-user
-  BeforeInstall:
-    - location: aws/code-deploy/scripts/beforeInstall.sh
-    - runas: ec2-user
   AfterInstall:
     - location: aws/code-deploy/scripts/afterInstall.sh
     - runas: ec2-user
