@@ -8,7 +8,7 @@ Environment=ENVIRONMENT=PROD
 Environment=AWS_ADDRESS=http://ec2-44-196-116-170.compute-1.amazonaws.com
 Environment=REDIS_ADDRESS=redis-one.uzmwbi.0001.use1.cache.amazonaws.com
 WorkingDirectory=/home/ec2-user/card-game/server
-ExecStart=/home/ec2-user/card-game/server/card-game-env/bin/python3 main.py
+ExecStart=/home/ec2-user/server/card-game-env/bin/python3 main.py
 Restart=always
 
 [Install]
