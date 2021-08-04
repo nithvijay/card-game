@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-export REACT_APP_AWS_ADDRESS=http://inspectorgame.com
+export REACT_APP_AWS_ADDRESS=https://inspectorgame.com
 
 cd /home/ec2-user
 sudo mv nginx.conf /etc/nginx/nginx.conf

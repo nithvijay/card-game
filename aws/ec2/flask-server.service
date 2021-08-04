@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=ec2-user
 Environment=ENVIRONMENT=PROD
-Environment=AWS_ADDRESS=http://inspectorgame.com
+Environment=AWS_ADDRESS=https://inspectorgame.com
 Environment=REDIS_ADDRESS=redis-one.uzmwbi.0001.use1.cache.amazonaws.com
 ExecStart=/home/ec2-user/server/card-game-env/bin/python3.8 /home/ec2-user/server/main.py
 Restart=always
