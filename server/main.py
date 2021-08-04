@@ -74,7 +74,7 @@ def on_page_loaded(pid):
         emit('setPid', pid)
         db.set(request.sid, pid)
 
-    emit('debug', {"pid": pid})
+    emit('debug', {"sid": request.sid, "pid": pid})
 
 
 @socketio.on("delete")
