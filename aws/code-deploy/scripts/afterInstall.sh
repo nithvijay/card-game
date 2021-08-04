@@ -7,7 +7,7 @@ sudo mv aws/ec2/flask-server.service /etc/systemd/system/flask-server.service
 sudo chown -R ec2-user .
 
 cd client
-. ~/.nvm/nvm.sh
+. /home/ec2-user/.nvm/nvm.sh
 npm install
 npm install
 npm install
