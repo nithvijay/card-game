@@ -33,7 +33,7 @@ init_database(db)
 
 @socketio.on("connect")
 def on_connect():
-    print(f"{request.sid} connected.\n\n\n\n")
+    print(f"{request.sid} connected\n\n")
 
 
 @socketio.on("disconnect")
@@ -74,7 +74,7 @@ def on_page_loaded(pid):
         emit('setPid', pid)
         db.set(request.sid, pid)
 
-    emit('debug', {"sid": request.sid, "pid": pid})
+    emit('debug', {"pid": pid})
 
 
 @socketio.on("delete")

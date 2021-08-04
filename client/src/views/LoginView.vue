@@ -22,7 +22,7 @@
         }"
         type="text"
         v-model="usernameModel"
-        placeholder="Ex: Jane Doe"
+        placeholder="Ex: John Doe"
       />
 
       <transition name="fade" mode="out-in">
