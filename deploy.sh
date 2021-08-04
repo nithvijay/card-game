@@ -1,16 +1,18 @@
 # # first time
 
-# sudo amazon-linux-extras install -y nginx1
-# sudo yum update
-# sudo yum install -y emacs git
+# sudo amazon-linux-extras install -y nginx1 redis6 python3.8
+# sudo yum -y update
+# sudo yum install -y ruby wget emacs
 
 # sudo mkdir /data
 # sudo chmod -R 775 /data 
 
+# wget https://bucket-name.s3.region-identifier.amazonaws.com/latest/install
+
 
 # curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 # . ~/.nvm/nvm.sh
-# nvm install node
+# nvm install node --lts
 
 # git clone https://github.com/nithvijay/card-game.git
 # sudo mv card-game/nginx.conf /etc/nginx/nginx.conf
@@ -30,7 +32,7 @@
 sudo mv nginx.conf /etc/nginx/nginx.conf
 
 export ENVIRONMENT=PROD
-export AWS_ADDRESS=http://ec2-100-25-192-54.compute-1.amazonaws.com
+export AWS_ADDRESS=http://ec2-44-196-116-170.compute-1.amazonaws.com
 export REDIS_ADDRESS=redis-one.uzmwbi.0001.use1.cache.amazonaws.com
 export REACT_APP_AWS_ADDRESS=$AWS_ADDRESS
 
