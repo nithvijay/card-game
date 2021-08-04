@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-export REACT_APP_AWS_ADDRESS=http://ec2-44-196-116-170.compute-1.amazonaws.com
+export REACT_APP_AWS_ADDRESS=http://inspectorgame.com
 
 cd /home/ec2-user
 sudo mv nginx.conf /etc/nginx/nginx.conf
@@ -9,8 +9,8 @@ sudo chown -R ec2-user .
 cd client
 npm install
 npm run build 
-rm -r /data/dist
-mv dist/ /data/
+sudo rm -rf /data/dist
+sudo mv dist/ /data/
 
 cd ../server
 python3.8 -m venv card-game-env

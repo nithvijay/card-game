@@ -7,9 +7,9 @@ import store from "./store";
 import "./index.css";
 
 const host =
-  process.env.NODE_ENV !== "production"
-    ? "http://localhost:5000"
-    : process.env.REACT_APP_AWS_ADDRESS;
+  process.env.NODE_ENV === "production"
+    ? process.env.REACT_APP_AWS_ADDRESS
+    : "http://localhost:5000";
 const socket = io(host);
 
 Vue.config.productionTip = false;
