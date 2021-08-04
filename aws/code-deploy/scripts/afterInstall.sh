@@ -7,10 +7,10 @@ sudo mv aws/ec2/flask-server.service /etc/systemd/system/flask-server.service
 sudo chown -R ec2-user .
 
 cd client
-npm install
-npm install
-npm install
-npm run build 
+/home/ec2-user/.nvm/versions/node/v16.4.0/bin/npm install
+/home/ec2-user/.nvm/versions/node/v16.4.0/bin/npm install
+/home/ec2-user/.nvm/versions/node/v16.4.0/bin/npm install
+/home/ec2-user/.nvm/versions/node/v16.4.0/bin/npm run build 
 sudo rm -rf /data/dist
 sudo mv dist/ /data/
 
