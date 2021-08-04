@@ -8,6 +8,8 @@ sudo chown -R ec2-user .
 
 cd client
 npm install
+npm install
+npm install
 npm run build 
 sudo rm -rf /data/dist
 sudo mv dist/ /data/
