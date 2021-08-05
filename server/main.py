@@ -1,15 +1,14 @@
-import random
 import os
+import random
 
 import eventlet
-from flask.helpers import get_env
 import redis
 from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
-from utils.db_init import init_database
-from utils.db_utils import clear_database, gen_random_pid, CARDS
 from database_wrapper import DB
+from utils.db_init import init_database
+from utils.db_utils import CARDS, clear_database, gen_random_pid
 
 eventlet.monkey_patch()
 
@@ -93,14 +92,6 @@ def on_submit_login_info(data):
     room = data['room']
     pid = data['pid']
 
-    # 1. check if pid was in the room
-    # 1. update username in room and emit game state
-    # 2. update user's game state and return to put them where they were
-    # 2. else check if room has started game
-    # True - game has already started - error message
-    # 3. else check if user in room has same user name
-    # True - username is taken - error message
-    # 4. else user can enter room
     if not db.exists(f"room_lobby_status:{room}"):  # room does not exist
         db.sadd("set_of_rooms", room)
 
@@ -183,7 +174,6 @@ def user_rejoin_room(db, pid, username, room, user_index):
 
     for stage_num in range(1, int(general_game_data['stage']) + 1):
         stage_data = db.get_json(f'stage_{stage_num}_data:{room}')
-        # TODO: only emit to user?
         emit(f'updateStage{stage_num}Data', stage_data)
     emit("setPageView", 'game-view')
 
