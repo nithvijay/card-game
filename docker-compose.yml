@@ -1,25 +1,25 @@
-version: '3.9'
+version: "3.9"
 
 services:
   backend:
     build: ./server/
     command: python main.py
     container_name: cg_backend
-    ports: 
+    ports:
       - "5000:5000"
-    volumes: 
+    volumes:
       - ./server/:/code
-    depends_on: 
+    depends_on:
       - redis
   client:
     build: ./client/
-    command: npm start
+    command: npm run serve
     container_name: cg_client
     ports:
-      - "3000:3000"
+      - "8080:8080"
     volumes:
-      - './client/:/app'
-      - '/app/node_modules'
+      - "./client/:/app"
+      - "/app/node_modules"
     environment:
       - CHOKIDAR_USEPOLLING=true
   redis:

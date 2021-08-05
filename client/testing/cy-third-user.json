@@ -1,0 +1,13 @@
+{
+  "fixturesFolder": false,
+  "supportFile": false,
+  "baseUrl": "http://localhost:8080",
+  "integrationFolder": "cypress/pair",
+  "testFiles": "**/third-user.js",
+  "viewportWidth": 400,
+  "viewportHeight": 400,
+  "defaultCommandTimeout": 15000,
+  "videosFolder": "cypress/videos-pair/third",
+  "screenshotsFolder": "cypress/screenshots-pair/third",
+  "$schema": "https://on.cypress.io/cypress.schema.json"
+}
