@@ -1,8 +1,9 @@
-def gen_random_pid(db):
-    generator = str(int(db.get("pid_generator_start")) + 1)
-    db.set("pid_generator_start", generator)
+import datetime
 
-    new_pid = f"...xxx{generator}"
+
+def gen_random_pid(db):
+    new_pid = str(
+        hash(datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S.%f")))
     db.sadd('set_of_pids', new_pid)
     return new_pid
 

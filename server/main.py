@@ -6,11 +6,13 @@ import redis
 from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
-from database_wrapper import DB
+from utils.database_wrapper import DB
 from utils.db_init import init_database
 from utils.db_utils import CARDS, clear_database, gen_random_pid
 
+
 eventlet.monkey_patch()
+
 
 app = Flask(__name__)
 
@@ -65,11 +67,13 @@ def remove_player_from_room(pid, room):
 
 @socketio.on("pageLoaded")
 def on_page_loaded(pid):
+    print(db.smembers("set_of_pids"))
     if db.sismember('set_of_pids', pid):  # if pid exists in database
         emit('setPid', pid)
         db.set(request.sid, pid)
     else:  # need to generate new pid
         pid = gen_random_pid(db)
+        print(pid)
         emit('setPid', pid)
         db.set(request.sid, pid)
 
@@ -676,4 +680,4 @@ def on_stage_5_go_to_lobby(data):
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='0.0.0.0')  # eventlet will be used, it
+    socketio.run(app, debug=False, host='0.0.0.0')  # eventlet will be used, it
