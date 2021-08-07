@@ -1,8 +1,8 @@
-import { getField, updateField } from "vuex-map-fields";
-
 const state = () => ({
-  username: localStorage.getItem("username"),
-  room: localStorage.getItem("room"),
+  username: localStorage.getItem("username")
+    ? localStorage.getItem("username")
+    : "",
+  room: localStorage.getItem("room") ? localStorage.getItem("room") : "",
   pid: "",
   pageView: "login-view",
 });
@@ -11,7 +11,6 @@ const getters = {
   sampleGetter(state) {
     return state.username;
   },
-  getField,
 };
 
 const actions = {
@@ -46,7 +45,6 @@ const mutations = {
   setPageView: function (state, pageView) {
     state.pageView = pageView;
   },
-  updateField,
 };
 
 export default {

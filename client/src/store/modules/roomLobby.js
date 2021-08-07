@@ -1,5 +1,3 @@
-import { getField, updateField } from "vuex-map-fields";
-
 const state = () => ({
   scoreToWin: "",
   numCardsInHand: "",
@@ -11,7 +9,6 @@ const getters = {
   someGetter(state) {
     return state.roomLobbyStatus.members;
   },
-  getField,
 };
 
 const actions = {
@@ -42,7 +39,6 @@ const mutations = {
   updateRoomLobbyStatus: function (state, roomLobbyStatus) {
     state.roomLobbyStatus = roomLobbyStatus;
   },
-  updateField,
 };
 
 export default {
