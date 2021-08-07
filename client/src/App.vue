@@ -23,16 +23,7 @@ import RoomLobbyView from "./views/RoomLobbyView.vue";
 
 export default {
   name: "App",
-  data: function () {
-    return {
-      screenOptions: ["login", "game", "room-lobby"],
-      screenIndex: 0,
-    };
-  },
   methods: {
-    switchViews: function () {
-      this.screenIndex = (this.screenIndex + 1) % this.screenOptions.length;
-    },
     clearStorage: function () {
       localStorage.clear();
       this.$socket.client.emit("delete");

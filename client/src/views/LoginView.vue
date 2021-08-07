@@ -22,7 +22,6 @@
         }"
         type="text"
         v-model="usernameModel"
-        placeholder="Ex: john"
       />
 
       <transition name="fade" mode="out-in">
@@ -54,7 +53,6 @@
         }"
         type="text"
         v-model="roomModel"
-        placeholder="Ex: ASDF"
       />
 
       <transition name="fade" mode="out-in">
