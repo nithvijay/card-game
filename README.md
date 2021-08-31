@@ -41,15 +41,17 @@ Then, go to `localhost:3000` to see the website
   - Nginx
 
 ## Technical Details
-When starting this project, I did not have that much web development experience. I just wanted to jump in and get started with a modern stack where I could experiement with different tools and technologies in an applied manner. 
+The frontend is built with `Vue.js`. `Vuex` is used for state management and `Vue-Socket.io-Extended` was used as a Socket.io client library. `Tailwind CSS` is used as a framework and all UI (except for icons) is custom made. The full frontend is located in the `client/` folder.
 
-A prototype of the website was created with React as the front-end and Flask as the back-end to serve as a minimum viable product. That website was hosted on an AWS EC2 instance and was very barebones. It was a great experience to learn React, but as a prototype I did not think about scope or UI.
+The backend is built with `Flask` and `Flask-SocketIO`. The code is located in the `server/` folder. Redis is used a message queue service for horizontally scaled backends and as a general in-memory database.
 
-Once the prototype gave me experience with Socket.io and the general process, I completely rewrote the website. I was familiar with Vue and Vuex at an internship, so I decided to retire React and continue with what I was already familiar with.
+There are three main "views" for the application - `Login`, `Lobby`, and `Game`. For the `Game` view, 5 stages are present. Each stage has its own game logic in the backend for starting, ending, and actions during the stage. `Vue-Socket.io-Extended` has a useful integration with `Vuex`, that allows events to be consumed directly by the store, which makes the code a lot more readable and clean.
 
+Redis is used as a database, but eventually this may get changed. There is a `database_wrapper.py` that was used, so hopefully switching databases will be easy in the future.
 
+Docker was used heavily in the development process. The database, frontend, and backed were separate containers, and `docker compose` was used for the development container orchestration.
 
-### Deployment Information
+## Deployment Information
 The website is fully hosted on AWS. The domain `inspectorgame.com` is registered with Route 53, which points to an EC2 instance. Nginx listens on incoming connections and routes root requests to the production build of the frontend. For other requests, such as `/socket.io`, Nginx serves as a reverse proxy for the backend which is also running on the EC2 instance with Eventlet. SSL is terminated at Nginx. For Redis, which is used as a database and message queue, ElastiCache is used.
 
 A CD pipeline is also implemented with AWS CodeDeploy and AWS CodePipeline. The `main` branch of this repo is configured to deploy automatically when a new commit is pushed. `appspec.yml` and the `aws/` directory detail much of the information for the pipeline.
