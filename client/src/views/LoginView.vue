@@ -92,6 +92,7 @@
     </div>
     <div class="border-blue-800 border-2 rounded-md bg-white flex max-w-lg">
       <a
+        target="_blank"
         href="https://github.com/nithvijay/card-game/blob/main/Instructions.md"
         class="
           text-lg text-center
@@ -108,6 +109,7 @@
       </a>
 
       <a
+        target="_blank"
         href="https://docs.google.com/forms/d/e/1FAIpQLSf0cF0S9Ms6Iqo1WFn7ayU-7D83Ce7ArGNkapf0-BpI-JK3fw/viewform?usp=sf_link"
         class="
           text-lg text-center
@@ -124,6 +126,7 @@
       </a>
 
       <a
+        target="_blank"
         href="https://github.com/nithvijay/card-game"
         class="
           text-lg text-center
