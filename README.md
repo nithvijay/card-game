@@ -81,8 +81,8 @@ A CD pipeline is also implemented with AWS CodeDeploy and AWS CodePipeline. The 
 
 
 ### Features
-- [ ] About page
-- [ ] Instructions
+- [x] About page
+- [x] Instructions
 - [ ] Refactor frontend into more components
 - [ ] A room leader that can change settings
 - [ ] Larger variety of cards
