@@ -63,7 +63,9 @@ A CD pipeline is also implemented with AWS CodeDeploy and AWS CodePipeline. The 
 - Backend
   - Database locks for Redis
   - Different database (DynamoDB)
-- Docker - Create multi-container backend with message queue
+- Docker
+  - Create multi-container backend with message queue
+  - Production mock local set up
 - Testing - E2E testing with Cypress
 
 ### Deployment
@@ -81,6 +83,7 @@ A CD pipeline is also implemented with AWS CodeDeploy and AWS CodePipeline. The 
 ### Features
 - [ ] About page
 - [ ] Instructions
+- [ ] Refactor frontend into more components
 - [ ] A room leader that can change settings
 - [ ] Larger variety of cards
 - [ ] General game balance
